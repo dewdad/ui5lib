@@ -1,6 +1,6 @@
 (function(){
 
-    var resourceName = "app.util.Controller";
+    var resourceName = "ui5lib.Controller";
     var controller =  {
         constructor:function(){
           // implement base init
