@@ -498,7 +498,6 @@ function arrayFindByKey(array,key,value){
     }
     return {item: undefined, index: undefined};
 }
-function ArrayItemByKey (array,key,value,index){ return arrayFindByKey.apply(this, arguments);}
 
 /**
  * arrayFindByPath allows you to search on an array using complex property paths e.g "size.height.getHeightByPixel"
