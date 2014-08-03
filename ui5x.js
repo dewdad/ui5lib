@@ -420,3 +420,38 @@ sap.ui.model.json.JSONModel.extend("sap.uiext.model.json.JSONModel", {
     renderer : {} // an empty renderer by convention inherits the parent renderer
 });
 /**!!!           END JSON Model             !!!**/
+
+/**!!!           Start Framework Fiddling             !!!**/
+
+function ui5FragmentDependencyFix () {
+    if(!!sap.ui.fragment) return;
+    $.sap.require("sap.ui.core.Fragment");
+    (function (fn) {
+        sap.ui.fragment = function () {
+            var controller = $.grep(arguments, function (v) {
+                return v instanceof sap.ui.core.mvc.Controller;
+            })[0];
+            var fragment = fn.apply(sap.ui, arguments);
+            if (!!controller){
+                var view = controller.getView();
+                view.addDependent(fragment);
+                if(!!fragment._dialog) view.addDependent(fragment._dialog);
+            }
+            return fragment;
+        }
+    }(sap.ui.fragment));
+}
+
+(function (fn) {
+    sap.ui.xmlfragment = function () {
+        ui5FragmentDependencyFix();
+        return fn.apply(sap.ui, arguments);
+    }
+}(sap.ui.xmlfragment));
+
+(function (fn) {
+    sap.ui.jsfragment = function () {
+        ui5FragmentDependencyFix();
+        return fn.apply(sap.ui, arguments);
+    }
+}(sap.ui.jsfragment));

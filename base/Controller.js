@@ -1,17 +1,16 @@
 (function(){
 
     var resourceName = "ui5lib.Controller";
-    var controller =  {
+    var baseController =  {
         constructor:function(){
-          // implement base init
-          var m = this.onInit;
-          this.onInit = function(){
-              this._initCustomFilters();
-              this._initValidValues();
-              this._initDateFilters();
-              //alert('base init');
-              return m.apply(this, arguments);
-          }
+            // implement base init
+            var m = this.onInit;
+            this.onInit = function(){
+                this._initCustomFilters();
+                this._initValidValues();
+                //alert('base init');
+                return m.apply(this, arguments);
+            }
         },
         _initCustomFilters: function(){
             if(!!this._customFiltersObj) this.setViewModelProperty('customFilters',this._customFiltersObj());
@@ -41,17 +40,7 @@
                 //this.setViewModelProperty('customFilters',this._customFiltersObj());
             }
         },
-        _initDateFilters: function(){
-        	var dateFilters = [{ID:"LastDay",Name:"Last Day"},
-        	                   {ID:"Last3Days",Name:"Last 3 Days"},
-        	                   {ID:"LastWeek",Name:"Last Week"},
-        	                   {ID:"LastMonth",Name:"Last Month"},
-        	                   {ID:"Last3Months",Name:"Last 3 Months"},
-        	                   {ID:"CustomDates",Name:"Custom Dates"}];
-        	
-        	this.setViewModelProperty('/dateFiltersValues', dateFilters);
-        },
-        
+
         getCustomFilters: function(){
             return this.getViewModelProperty("customFilters");
         },
@@ -71,6 +60,9 @@
         getComponentId: function(oControl){
             return sap.ui.core.Component.getOwnerIdFor(oControl || this.getView());
         },
+        getComponent: function(oControl){
+            return sap.ui.getCore().getComponent(this.getComponentId());
+        },
         geti18nBundle: function(){
             var sComponentId = this.getComponentId();
             return sap.ui.component(sComponentId).getModel("i18n").getResourceBundle();
@@ -87,10 +79,11 @@
         var mObj = obj;
         $.each(models, function(index, value){
             mObj['get'+capsFirst(value)+'Model'] = function(){
-                if(!sap.ui.getCore().getModel(value)) {
-                    sap.ui.getCore().setModel(new sap.uiext.model.json.JSONModel(), value);
+                var core = this.getComponent();
+                if(!core.getModel(value)) {
+                    core.setModel(new sap.uiext.model.json.JSONModel(), value);
                 }
-                return sap.ui.getCore().getModel(value);
+                return core.getModel(value);
             };
 
             // There is some confusing code up ahead for the getters and setters that serves to default the getters/setters'
@@ -103,7 +96,7 @@
                     (sPath.charAt(0)==='/')
                         ?sPath
                         :('/'+modelRootProperty+((typeof(sPath)!=='string')?'':'/'+sPath)),
-                    oValue || sPath);
+                        oValue || sPath);
                 oModel.checkUpdate();
                 return ret;
             };
@@ -124,8 +117,8 @@
     // set[ModelName]ModelPropety
     // methods on the base controller.
     // !!All access to global models will be done here only!!
-    addModelMembers(controller, ['view']);
+    addModelMembers(baseController, ['view']);
 
     jQuery.sap.declare(resourceName);
-    sap.ui.core.mvc.Controller.extend(resourceName, controller);
-}());
+    sap.ui.core.mvc.Controller.extend(resourceName, baseController);
+}.call(this));
