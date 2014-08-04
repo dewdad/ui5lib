@@ -3,21 +3,40 @@
     var resourceName = "ui5lib.Controller";
     var baseController =  {
         constructor:function(){
-            // implement base init
-            var m = this.onInit;
+            var m = this.onInit; // store onInit for child instance
+
+            // base init
             this.onInit = function(){
                 this._initCustomFilters();
                 this._initValidValues();
-                //alert('base init');
+
+                // Route handling
+                this.getRouter().attachRouteMatched(function(evt){
+                    var routeName = evt.getParameter("name");
+                    if(this.isMyRoute(routeName)){
+                        // When the route for the current view is matched
+                        this.onMyRouteMatched && this.onMyRouteMatched.apply(this, arguments);
+                    }
+                    this.onRouteMatched && this.onRouteMatched.apply(this, arguments);
+                }, this);
+
+                // call onInit for child instance
                 return m.apply(this, arguments);
             }
         },
         _initCustomFilters: function(){
             if(!!this._customFiltersObj) this.setViewModelProperty('customFilters',this._customFiltersObj());
         },
+        /**
+         * Note the at for this to initialize the valid values required by a controller there must be
+         * an implementation of loadValidValues in on the inheritance path
+         * @private
+         */
         _initValidValues: function(){
+            if(!this.loadValidValues) return; // Check for implementation of loadValidValues
+
             var vVFields = this._validValues;
-            var controller = this;
+            var that = this;
             if(!!vVFields){
                 vVFields.forEach(function(el){
                     var entity, field, validValues;
@@ -25,15 +44,12 @@
                     entity = el.entity;
                     field = el.field;
 
-                    validValues = controller.getViewModelProperty('/validValues/'+entity+'/'+field);
+                    validValues = that.getViewModelProperty('/validValues/'+entity+'/'+field);
 
                     if(!validValues){
-                        // TODO: get application service URI from Component
-                        $.get("/cvs/v2/OData/getValidValues?resourceType='"+entity+"'&fieldName='"+field+"'", function(body, status, xhr){
-                            var matchExp = new RegExp(field+'=\\[(.*)\\]', 'gm');
-                            var responseStr = xhr.responseText;
-                            var validValues = $.map(matchExp.exec(responseStr)[1].split(', '), function(value){return {desc: value};});
-                            controller.setViewModelProperty('/validValues/'+entity+'/'+field, validValues);
+                        // !! validValues needs to be implemented on the Application's base controller
+                        that.loadValidValues(entity, field, function(validValues){
+                            that.setViewModelProperty('/validValues/'+entity+'/'+field, validValues);
                         });
                     }
                 });
@@ -50,6 +66,13 @@
         },
         myName: function(){
             return this.getView().getControllerName().split('.').pop();
+        },
+        getViewName: function(){
+          return this.getView().getViewName();
+        },
+        isMyRoute: function(routeName){
+          var routeView = getObjProperty(this.getRouter(),"_oRoutes."+routeName+"._oConfig.view");
+          return new RegExp(routeView+'$').test(this.getViewName());
         },
         getModelEntity: function(){
             return this._modelEntity || this.myName();
