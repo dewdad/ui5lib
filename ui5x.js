@@ -1,4 +1,30 @@
 console.log("ui5x.js is loaded");
+this.ui5x = jQuery.extend((this.ui5x || {}),{
+    _modLoadHandlers: {},
+    _checkedModules: {},
+    addModLoadHandler: function(modName, fnCb){
+        var modLoadHandlers = this._modLoadHandlers[modName] || (this._modLoadHandlers[modName]=[]);
+        if(this._checkedModules[modName] || inArray(modName, $.sap.getAllDeclaredModules())){
+            fnCb();
+            this._checkedModules[modName] = true;
+        }
+        else modLoadHandlers.push(fnCb);
+    }
+});
+
+(function(fn) {
+    jQuery.sap.require = function(){
+        var modName = arguments[0].modName || arguments[0];
+        var toRet = fn.apply(jQuery.sap, arguments);
+        var loadHandlers = ui5x._modLoadHandlers[modName] || [];
+        $.each(loadHandlers, function(i,fnCb){
+            fnCb();
+            loadHandlers.splice(i,1);
+        });
+        return toRet;
+    }
+})(jQuery.sap.require);
+
 jQuery.sap.require("sap.ui.core.Element");
 jQuery.sap.require("sap.ui.model.Model");
 
@@ -423,9 +449,10 @@ sap.ui.model.json.JSONModel.extend("sap.uiext.model.json.JSONModel", {
 
 /**!!!           Start Framework Fiddling             !!!**/
 
-function ui5FragmentDependencyFix () {
-    if(!!sap.ui.fragment) return;
-    $.sap.require("sap.ui.core.Fragment");
+// The following 3 closures are required to fix the model inheritance tree for fragments and fragment-dialogs (sadly these lie in different branches currently)
+
+ui5x.addModLoadHandler("sap.ui.core.Fragment", function() {
+
     (function (fn) {
         sap.ui.fragment = function () {
             var controller = $.grep(arguments, function (v) {
@@ -434,24 +461,11 @@ function ui5FragmentDependencyFix () {
             var fragment = fn.apply(sap.ui, arguments);
             if (!!controller){
                 var view = controller.getView();
-                view.addDependent(fragment);
-                if(!!fragment._dialog) view.addDependent(fragment._dialog);
+                view.addDependent(fragment); // fix fragment inheritance
+                if(!!fragment._dialog) view.addDependent(fragment._dialog); // fix fragment-dialog inheritance
             }
             return fragment;
         }
     }(sap.ui.fragment));
-}
 
-(function (fn) {
-    sap.ui.xmlfragment = function () {
-        ui5FragmentDependencyFix();
-        return fn.apply(sap.ui, arguments);
-    }
-}(sap.ui.xmlfragment));
-
-(function (fn) {
-    sap.ui.jsfragment = function () {
-        ui5FragmentDependencyFix();
-        return fn.apply(sap.ui, arguments);
-    }
-}(sap.ui.jsfragment));
+});

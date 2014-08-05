@@ -157,6 +157,14 @@ function getUrlVars(url) {
     return vars;
 }
 
+/**
+ * Returns a property from an object by a given path from the root. Traverses getters as well.
+ * @param obj
+ * @param path
+ * @param bCall : boolean (default: true) Whether to call the path components if they are methods
+ * @param delimiter : string (default: ".")
+ * @return {*}
+ */
 function getObjProperty(obj, path, bCall, delimiter){
     if(!arguments[1])
         return obj;
