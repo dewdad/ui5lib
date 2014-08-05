@@ -166,7 +166,7 @@ function getUrlVars(url) {
  * @return {*}
  */
 function getObjProperty(obj, path, bCall, delimiter){
-    if(!arguments[1])
+    if(!arguments[1] || !obj)
         return obj;
 
     var parent = obj;
