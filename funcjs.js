@@ -678,6 +678,10 @@ function DateInXDays(aDate, xDays){
     return newDate;
 }
 
+/**
+ * Returns annual week of the date
+ * @return {number} Annual week number
+ */
 Date.prototype.getWeek = function() {
     var oneJanTime = Date.UTC(this.getUTCFullYear(),0,1);
     var firstWeekStartTime = oneJanTime - ((new Date(oneJanTime)).getUTCDay())*86400000;
@@ -687,57 +691,161 @@ Date.prototype.getWeek = function() {
     return Math.ceil(weeks);
 };
 
-var DateFunctions={
-    date2yyyy_mm_dd_hh_mm_ss:function (jsDate) {
-        var	tDate = jsDate || new Date(), 	year = "" + tDate.getFullYear(), month, day, hour, minute, second;
+/*
+ @vValue {Number}
+ @sType {String}
+ return {Date}
+ */
+Date.prototype.add = function(nValue, sType) {
+    var self = this;
+    var dt = new Date(self.getTime());
 
-        month = "" + (tDate.getMonth() + 1); if (month.length == 1) { month = "0" + month; }
+    switch(sType) {
+        case 's':
+        case 'ss':
+        case 'second':
+        case 'seconds':
+            dt.setSeconds(dt.getSeconds() + nValue);
+            return dt;
+        case 'm':
+        case 'mm':
+        case 'minute':
+        case 'minutes':
+            dt.setMinutes(dt.getMinutes() + nValue);
+            return dt;
+        case 'h':
+        case 'hh':
+        case 'hour':
+        case 'hours':
+            dt.setHours(dt.getHours() + nValue);
+            return dt;
+        case 'd':
+        case 'dd':
+        case 'day':
+        case 'days':
+            dt.setDate(dt.getDate() + nValue);
+            return dt;
+        case 'M':
+        case 'MM':
+        case 'month':
+        case 'months':
+            dt.setMonth(dt.getMonth() + nValue);
+            return dt;
+        case 'y':
+        case 'yyyy':
+        case 'year':
+        case 'years':
+            dt.setFullYear(dt.getFullYear() + nValue);
+            return dt;
+    }
+    return dt;
+};
 
-        day = "" + tDate.getDate(); if (day.length == 1) { day = "0" + day; }
+/**
+ * Compare dates
+ * @param {Date} date
+ * @return {Number} Results: -1 = current date is earlier than @date, 0 = current date is same as @date, 1 = current date is later than @date
+ */
+Date.prototype.compare = function(date) {
 
-        hour = "" + tDate.getHours(); if (hour.length == 1) { hour = "0" + hour; }
+    var self = this;
+    var r = self.getTime() - date.getTime();
 
-        minute = "" + tDate.getMinutes(); if (minute.length == 1) { minute = "0" + minute; }
+    if (r === 0)
+        return 0;
 
-        second = "" + tDate.getSeconds(); if (second.length == 1) { second = "0" + second; }
+    if (r < 0)
+        return -1;
 
-        return year + "-" + month + "-" + day + " " + hour + "-" + minute + "-" + second;
+    return 1;
+};
+
+/**
+ * Compare two dates
+ * @param {String or Date} d1
+ * @param {String or Date} d2
+ * @return {Number} Results: -1 = @d1 is earlier than @d2, 0 = @d1 is same as @d2, 1 = @d1 is later than @d2
+ */
+Date.compare = function(d1, d2) {
+
+    if (typeof(d1) === STRING)
+        d1 = d1.parseDate();
+
+    if (typeof(d2) === STRING)
+        d2 = d2.parseDate();
+
+    return d1.compare(d2);
+};
+
+/*
+ Format date to string
+ @format {String}
+ return {String}
+ */
+Date.prototype.format = function(format) {
+    var self = this;
+
+    var h = self.getHours();
+    var m = self.getMinutes().toString();
+    var s = self.getSeconds().toString();
+    var M = (self.getMonth() + 1).toString();
+    var yyyy = self.getFullYear().toString();
+    var d = self.getDate().toString();
+
+    var a = 'AM';
+    var H = h.toString();
+
+
+    if (h >= 12) {
+        h -= 12;
+        a = 'PM';
+    }
+
+    if (h === 0)
+        h = 12;
+
+    h = h.toString();
+
+    var hh = h.padLeft(2, '0');
+    var HH = H.padLeft(2, '0');
+    var mm = m.padLeft(2, '0');
+    var ss = s.padLeft(2, '0');
+    var MM = M.padLeft(2, '0');
+    var dd = d.padLeft(2, '0');
+    var yy = yyyy.substring(2);
+
+    return format.replace(/yyyy/g, yyyy).replace(/yy/g, yy).replace(/MM/g, MM).replace(/M/g, M).replace(/dd/g, dd).replace(/d/g, d).replace(/HH/g, HH).replace(/H/g, H).replace(/hh/g, hh).replace(/h/g, h).replace(/mm/g, mm).replace(/m/g, m).replace(/ss/g, ss).replace(/s/g, ss).replace(/a/g, a);
+};
+
+
+DateDiff= {
+    inDays: function(d1, d2) {
+        var mD1 = new Date(d1);
+        var mD2 = new Date(d2);
+        mD1.setHours(0,0,0,0);
+        mD2.setHours(0,0,0,0);
+
+        return  Math.ceil((mD2 - mD1) / 86400000) + 1;
     },
-    yyyy_mm_dd2Date: function(yyyymmdd){
-        var YYYY = yyyymmdd.substring(0, 4);
-        var MM = yyyymmdd.substring(4, 6);
-        var DD = yyyymmdd.substring(6);
-        return new Date(parseInt(YYYY, 10), parseInt(MM, 10) - 1, parseInt(DD, 10));
+
+    inWeeks: function(d1, d2) {
+        var t2 = d2.getTime();
+        var t1 = d1.getTime();
+
+        return parseInt((t2-t1)/(24*3600*1000*7), 10);
     },
-    DateDiff: {
-        inDays: function(d1, d2) {
-            var mD1 = new Date(d1);
-            var mD2 = new Date(d2);
-            mD1.setHours(0,0,0,0);
-            mD2.setHours(0,0,0,0);
 
-            return  Math.ceil((mD2 - mD1) / 86400000) + 1;
-        },
+    inMonths: function(d1, d2) {
+        var d1Y = d1.getFullYear();
+        var d2Y = d2.getFullYear();
+        var d1M = d1.getMonth();
+        var d2M = d2.getMonth();
 
-        inWeeks: function(d1, d2) {
-            var t2 = d2.getTime();
-            var t1 = d1.getTime();
+        return (d2M+12*d2Y)-(d1M+12*d1Y);
+    },
 
-            return parseInt((t2-t1)/(24*3600*1000*7), 10);
-        },
-
-        inMonths: function(d1, d2) {
-            var d1Y = d1.getFullYear();
-            var d2Y = d2.getFullYear();
-            var d1M = d1.getMonth();
-            var d2M = d2.getMonth();
-
-            return (d2M+12*d2Y)-(d1M+12*d1Y);
-        },
-
-        inYears: function(d1, d2) {
-            return d2.getFullYear()-d1.getFullYear();
-        }
+    inYears: function(d1, d2) {
+        return d2.getFullYear()-d1.getFullYear();
     }
 };
 
@@ -824,7 +932,6 @@ if (!Array.prototype.reduce)
         return rv;
     };
 }
-
 
 //************************** Type definitions ******************************//
 // definition of validation error
