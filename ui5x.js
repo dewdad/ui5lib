@@ -346,8 +346,10 @@ sap.ui.model.odata.ODataListBinding.prototype.x_search = function(aFields, sQuer
         var searchFilter = new sap.ui.model.Filter('__SEARCHFILTER__' + aFields.join('/') + '__SEARCHFILTER__', 'EQ', sQuery);
         searchFilter.id = "__SEARCHFILTER__";
         this.x_addFilter(searchFilter);
-        return this/*.sort(aSorters)*/.filter(aFilters);
+    }else{
+        this.x_removeFilter("__SEARCHFILTER__");
     }
+    return this/*.sort(aSorters)*/.filter(aFilters);
 
 };
 
