@@ -132,6 +132,7 @@ function setProperty(obj, value, path, delimiter) {
  */
 function getValuesByKeys(obj, keys){
     var values=[];
+    keys = keys || Object.keys(obj);
     for(var i = 0, keysLen = keys.length; i<keysLen; i++){
         var value = obj[keys[i]];
         if(value) values.push(value);
@@ -523,6 +524,19 @@ function arrayFindByPath(array,path,value, index, delimiter){
             return !!index? i: array[i];
     }
     return null;
+}
+
+function removeFromArray(arr, remove) {
+    remove = isArray(remove)? remove: [remove];
+    var what, a = arguments, L = remove.length, ax;
+
+    while (L > 0 && arr.length) {
+        what = remove[--L];
+        while ((ax= arr.indexOf(what)) !== -1) {
+            arr.splice(ax, 1);
+        }
+    }
+    return arr;
 }
 
 function isNumeric(test){
@@ -931,6 +945,39 @@ if (!Array.prototype.reduce)
 
         return rv;
     };
+}
+
+function addProperty(obj, sName, oConfig){
+    var mObj = obj;
+    oConfig = oConfig || {};
+    var bMultiple = oConfig.multiple || false;
+    var sSingleName = oConfig.multiple? (oConfig.singleName || sName.replace(/s$/,'')): sName;
+
+    //if(mObj._properties)
+    mObj['get'+capsFirst(sSingleName)] = function(key){
+        if(!this['_'+sName]) return undefined;
+
+        return this['_'+sName][key];
+    };
+
+    if(bMultiple) {
+        mObj['remove'+capsFirst(sSingleName)] = function(key){
+            if(!this['_'+sName]) return undefined;
+            var toRet = this['_'+sName][key]
+            delete this['_'+sName][key]
+            return toRet;
+        };
+        mObj['add' + capsFirst(sSingleName)] = function (key, value) {
+            this['_'+sName] = this['_'+sName] || []; // init
+            var justValue = arguments.length<2;
+
+            if(justValue){
+                this['_'+sName].push(arguments[0]);
+            }else{
+                this['_'+sName][key] = value;
+            }
+        };
+    }
 }
 
 //************************** Type definitions ******************************//

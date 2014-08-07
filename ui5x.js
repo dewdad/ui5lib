@@ -221,25 +221,96 @@ sap.ui.core.Element.prototype.x_GetLabelText = function(){
 
 $.sap.require('sap.ui.model.odata.ODataListBinding');
 
+(function(fn){
+    sap.ui.model.odata.ODataListBinding.prototype.createFilterParams = function(aFilters){
+        if(!!this._staticFilters)
+            aFilters = (aFilters||[]).concat(this._staticFilters.concat(getValuesByKeys(this._staticFilters)) || []);
+        return fn.apply(this, arguments);
+    };
+})(sap.ui.model.odata.ODataListBinding.prototype.createFilterParams);
+// removed in favor of hijacking ODataListBinding.prototype.createFilterParams, as it occurs after the aFilters member is updated
+/*(function(fn){
+    sap.ui.model.odata.ODataListBinding.prototype.filter = function(aFilters){
+        if(!!this._staticFilters)
+            aFilters = (aFilters||[]).concat(this._staticFilters.concat(getValuesByKeys(this._staticFilters)) || []);
+        return fn.apply(this, arguments);
+    };
+})(sap.ui.model.odata.ODataListBinding.prototype.filter);*/
+
+/**
+ * adds static filters to the list binding object that will persist across filter calls
+ * @param {sap.ui.model.Filter | array} aFilters
+ * @return {sap.ui.model.ListBinding} returns <code>this</code> to facilitate method chaining
+ *
+ * @public
+ * @name sap.ui.model.odata.ODataListBinding#x_addFilter
+ * @function
+ */
+sap.ui.model.odata.ODataListBinding.prototype.x_addFilter= function(aFilters){
+    this._staticFilters = this._staticFilters || [];
+    var that = this;
+    aFilters = isArray(aFilters)? aFilters: [aFilters];
+    aFilters.forEach(function(v){
+        if(!!v.id){
+            that._staticFilters[v.id] = v;
+            delete v.id;
+        }else{
+            that._staticFilters.push(v);
+        }
+    });
+    // removed in favor of hijacking ODataListBinding.prototype.createFilterParams, as it occurs after the aFilters member is updated
+    // removeFromArray(this.aFilters, this._staticFilters.concat(getValuesByKeys(this._staticFilters)));
+
+    return this.filter(this.aFilters);
+};
+/**
+ * Removes a filter from the binding via filter id or value
+ * @param {string | sap.ui.model.Filter} filter
+ * @return {sap.ui.model.ListBinding} returns <code>this</code> to facilitate method chaining
+ *
+ * @public
+ * @name sap.ui.model.odata.ODataListBinding#x_removeFilter
+ * @function
+ */
+sap.ui.model.odata.ODataListBinding.prototype.x_removeFilter= function(filter){
+    if(!this._staticFilters) return;
+
+    if(typeof filter === 'string'){
+        delete this._staticFilters[filter];
+    }else if(filter instanceof  sap.ui.model.Filter){
+        removeFromArray(this._staticFilters, filter);
+    }else{
+        throw new Error("Unrecognized filter type, needs to either id or sap.ui.model.Filter");
+    }
+    return this.filter(this.aFilters);
+};
+
+sap.ui.model.odata.ODataListBinding.prototype.x_removeAllFilters= function(filter){
+    this._staticFilters = [];
+    this.filter();
+}
+
+
 /**
  * Adds support to the ODataListBinding type to search on OData service endpoints.
  * it does so by building a specialized filter that is later extracted before XHR open and replaced
  * with a valid logical contains statement chained by "or" operator.
  * @param aFields   An array of strings corresponding to the service entity fields to be included in the search
  * @param sQuery    The search term
+ * @return {sap.ui.model.ListBinding} returns <code>this</code> to facilitate method chaining
  */
 sap.ui.model.odata.ODataListBinding.prototype.x_search = function(aFields, sQuery){
     // Add support for search ONCE
     if(!sap.ui.model.odata.ODataListBinding.prototype.x_searchSupport){
         // Overriding filter on oBinding to check for the search filter before issuing a filter on the binding
-        (function(filter){
+        /*(function(filter){
             sap.ui.model.odata.ODataListBinding.prototype.filter = function(aFilters){
               if(!!this.x_searchFilter){
                   aFilters.push(this.x_searchFilter);
               }
               return filter.apply(this, arguments);
             };
-        })(sap.ui.model.odata.ODataListBinding.prototype.filter);
+        })(sap.ui.model.odata.ODataListBinding.prototype.filter);*/
 
         // Augmenting XHR open to serialize the special search filter from the binding's filter string
         (function() {
@@ -257,24 +328,27 @@ sap.ui.model.odata.ODataListBinding.prototype.x_search = function(aFields, sQuer
 
                     arguments[1] = arguments[1].replace(matches[0], searchFilterStr);
                 }
-                return proxied.apply(this, [].slice.call(arguments));
+                return proxied.apply(this, arguments);
             };
         })();
         sap.ui.model.odata.ODataListBinding.prototype.x_searchSupport = true;
     }
 
     var aFilters = this.aFilters;
-    var aSorters = this.aSorters;
+    //var aSorters = this.aSorters;
     
     // clear out the search filter
-    aFilters = $.grep(aFilters, function(v){ if (v.sPath.search(/__/)<0) return true; });
-    this.x_searchFilter= null;
+    /*aFilters = $.grep(aFilters, function(v){ if (v.sPath.search(/__/)<0) return true; });
+    this.x_searchFilter= null;*/
 
-    if(!!sQuery){ // add the special search filter to be serialized on xhr open
-        this.x_searchFilter = new sap.ui.model.Filter('__SEARCHFILTER__'+aFields.join('/')+'__SEARCHFILTER__', 'EQ', sQuery);
+    if(!!sQuery) { // add the special search filter to be serialized on xhr open
+        /*this.x_searchFilter =*/
+        var searchFilter = new sap.ui.model.Filter('__SEARCHFILTER__' + aFields.join('/') + '__SEARCHFILTER__', 'EQ', sQuery);
+        searchFilter.id = "__SEARCHFILTER__";
+        this.x_addFilter(searchFilter);
+        return this/*.sort(aSorters)*/.filter(aFilters);
     }
-    
-    this.sort(aSorters).filter(aFilters);
+
 };
 
 /**!!!          JSON Model              !!!**/
