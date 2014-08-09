@@ -314,9 +314,9 @@ function diff(template, override) {
 var isEqual = function ( first, second ) {
     /* First, let’s check whether the 2 values are both primitive types because if they are both primitive types, then we can just use the '===” operator to determine whether they are deeply equal to each other. */
     /* The isPrimitive function is a helper function I defined below to help us out. */
-    if ( isPrimitive(first) && isPrimitive(second) ) {
+    if ( first === second ) {
         /* If this part of the code is reached, it means that both values are primitive types. In that case, we can simply use our '===” operator to test for deep equality. */
-        return first === second;
+        return true;
     }
     /* Second, if we reach this part of the code, it means that either: 1) One of the values is a primitive type while the other one isn’t, or 2) Both values are reference types */
     /* The else—if code directly below will test for the (1) scenario. */

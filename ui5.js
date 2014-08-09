@@ -91,30 +91,28 @@ $.sap.declare('mui');
          * @param viewData pass an object to the view's updateView method, which does something and returns the view itself (optional)
          * @return {sap.ui.view}
          */
-        view: function(oView, viewData){
-            var viewObj= oView || {};
-            var strArg = false;                                                                                                                                                                                                                                                                                                                                             
-            if(typeof(oView) == 'string'){
+        view: function(pView, viewData){
+            var viewObj= pView || {};
+            var idIsName = false;
+            var guessType = false;
+            if(typeof(pView) == 'string'){
                 viewObj = {};
-                viewObj.viewName = oView;
-                strArg = true;
+                viewObj.viewName = pView;
+                idIsName = true;
             }
 
-            //viewObj.type = oView.type || sap.ui.core.mvc.ViewType.JS;
-            $.extend(viewObj, {type: sap.ui.core.mvc.ViewType.JS, height:'100%'});
+            if(!viewObj.type){
+                viewObj.type = sap.ui.core.mvc.ViewType.XML;
+                guessType = true;
+            }
+            viewObj = $.extend({height:'100%'}, viewObj);
 
-//             var vResource = sui.getViewResource();
-//             if(!!vResource && !!viewObj.viewName && viewObj.viewName.search('^'+vResource)<0){
-//                 viewObj.viewName = vResource+'.'+viewObj.viewName;
-//             }
-            // TODO: override sap.ui.registerLocalModule to assume view loading root
-
-            if(strArg){
+            if(idIsName){
                 viewObj.id = viewObj.viewName;// viewObj.viewName.replace(/\./g,'_');
             }
 
             if(!!viewObj.id){
-                var oElement = sap.ui.getCore().getElementById(viewObj.id);
+                var oElement = sap.ui.getCore().byId(viewObj.id);
                 if(!!oElement){
                     return (oElement.updateView && oElement.updateView(viewData)) || oElement;
                 }
@@ -124,17 +122,30 @@ $.sap.declare('mui');
                 oView = sap.ui.view(viewObj)
             }catch(e){
                 console.log(e);
-                viewObj.type = 'XML';
-                try{oView = sap.ui.view(viewObj);}
-                catch(e){
-                    console.log(e);
+                if(guessType) {
+                    viewObj.type = 'JS';
+                    try {
+                        oView = sap.ui.view(viewObj);
+                    }catch(e){
+                        console.log(e);
+                    }
                 }
             }
             
             console.log(viewObj);
             if(!!err && !oView) throw err;
             
-            return (oView.updateView && viewData && oView.updateView(viewData)) || oView;
+            return (!!oView && !!oView.updateView && !!viewData && oView.updateView(viewData)) || oView;
+        },
+        getViewType: function(oView){
+            var types = ['XML','JS','HTML'];
+            var i = types.length;
+            var className = oView.getMetadata()._sClassName;
+
+            while(types[--i]){
+                if(className.search(types[i])>0) break;
+            }
+            return types[i];
         },
         getModelData: function(src){
             return src.getModel().getProperty(src.getBindingContext().getPath());
