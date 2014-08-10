@@ -705,6 +705,15 @@ Date.prototype.getWeek = function() {
     return Math.ceil(weeks);
 };
 
+Date.prototype.dayStart = function() {
+    this.setHours(0,0,0,0);
+    return this;
+}
+Date.prototype.dayEnd = function() {
+    this.setHours(23,59,59,999);
+    return this;
+}
+
 /*
  @vValue {Number}
  @sType {String}

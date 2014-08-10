@@ -239,6 +239,7 @@ $.sap.require('sap.ui.model.odata.ODataListBinding');
 
 /**
  * adds static filters to the list binding object that will persist across filter calls
+ * @param {string} sId? The id for the filter, this way filters can be updated or easily removed
  * @param {sap.ui.model.Filter | array} aFilters
  * @return {sap.ui.model.ListBinding} returns <code>this</code> to facilitate method chaining
  *
@@ -246,13 +247,24 @@ $.sap.require('sap.ui.model.odata.ODataListBinding');
  * @name sap.ui.model.odata.ODataListBinding#x_addFilter
  * @function
  */
-sap.ui.model.odata.ODataListBinding.prototype.x_addFilter= function(aFilters){
+sap.ui.model.odata.ODataListBinding.prototype.x_addFilter= function(sId, aFilters){
+    if(typeof sId !== 'string'){
+        if(arguments.length>1){
+            console.error("sId must be a string");
+            return;
+        }
+        aFilters = sId;
+        sId = undefined;
+    }else if(aFilters.length && aFilters.length>1){
+        console.error("If an sId is assigned, only one filter may be given. Id's may be assigned inside the filters as well");
+        return;
+    }
     this._staticFilters = this._staticFilters || [];
     var that = this;
     aFilters = isArray(aFilters)? aFilters: [aFilters];
     aFilters.forEach(function(v){
-        if(!!v.id){
-            that._staticFilters[v.id] = v;
+        if(!!sId || !!v.id){
+            that._staticFilters[(sId || v.id)] = v;
             delete v.id;
         }else{
             that._staticFilters.push(v);
