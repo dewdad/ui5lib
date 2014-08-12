@@ -132,7 +132,7 @@ $.sap.declare('mui');
                 }
             }
             
-            console.log(viewObj);
+            //console.log(viewObj);
             if(!!err && !oView) throw err;
             
             return (!!oView && !!oView.updateView && !!viewData && oView.updateView(viewData)) || oView;

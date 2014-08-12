@@ -49,6 +49,8 @@ function extendController (sExtName, extImpl, baseName){
             this._initCustomFilters();
             this._initValidValues();
 
+            this.router = this.getRouter();
+
             // Route handling
             this.getRouter().attachRouteMatched(function(evt){
                 var routeName = evt.getParameter("name");
@@ -99,6 +101,13 @@ function extendController (sExtName, extImpl, baseName){
             var sComponentId = sap.ui.core.Component.getOwnerIdFor(this.getView());
             return sap.ui.component(sComponentId).getEventBus();
         },
+        getRouter : function () {
+            return sap.ui.core.UIComponent.getRouterFor(this);
+        },
+        navTo : function() {
+          var router = this.getRouter();
+          return router.navTo.apply(router, arguments);
+        },
         myName: function(){
             return this.getView().getControllerName().split('.').pop();
         },
@@ -111,9 +120,6 @@ function extendController (sExtName, extImpl, baseName){
         },
         getModelEntity: function(){
             return this._modelEntity || this.myName();
-        },
-        getRouter : function () {
-            return sap.ui.core.UIComponent.getRouterFor(this);
         },
         getComponentId: function(oControl){
             return sap.ui.core.Component.getOwnerIdFor(oControl || this.getView());
