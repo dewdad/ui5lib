@@ -609,9 +609,19 @@ var validate={
  * @param pArray
  * @return {boolean}  true if elment is found in the array false otherwise
  */
-function inArray(pValue, pArray){
-    if(pArray)
-        return (jQuery.inArray(pValue, pArray)>=0)
+function inArray(value, aArray, bIsBool){
+    bIsBool = bIsBool === false? false: true;
+
+    try{
+        var i = aArray.length, item;
+
+        while(item = aArray[--i]){
+            if(isEqual(item, value)) return bIsBool? true: i;
+        }
+    }catch(e){
+        console.debug(e);
+    }
+    return false;
 }
 
 function isDefined(v){

@@ -41,6 +41,20 @@ function extendController (sExtName, extImpl, baseName){
 };
 
 (function(){
+    jQuery.sap.require("sap.m.routing.RouteMatchedHandler");
+    jQuery.sap.require("sap.ui.core.routing.Router");
+
+    (function(fn){
+        sap.ui.core.routing.Router.prototype.attachRouteMatched = function(){
+            if(!this._RouteMatchedSubscribers) this._RouteMatchedSubscribers = [];
+
+            if(!inArray(arguments, this._RouteMatchedSubscribers)){
+                fn.apply(this, arguments);
+                this._RouteMatchedSubscribers.push(arguments);
+                console.debug('Listener attatched to routing', arguments);
+            }
+        }
+    }(sap.ui.core.routing.Router.prototype.attachRouteMatched))
 
     var resourceName = "ui5lib.Controller";
     var baseController =  {
@@ -52,18 +66,19 @@ function extendController (sExtName, extImpl, baseName){
             this.router = this.getRouter();
 
             // Route handling
-            this.getRouter().attachRouteMatched(function(evt){
-                var routeName = evt.getParameter("name");
-                if(this.isMyRoute(routeName)){
-                    // When the route for the current view is matched
-                    this.onMyRouteMatched && this.onMyRouteMatched.apply(this, arguments);
-                }
-                if(!!this.onRouteMatched) {
-                    if (!this._baseOnRouteMatched) this._baseOnRouteMatched = this.onRouteMatched;
-                    this.onRouteMatched = function(){}; // empty the handler to avoid calling twice
-                    this._baseOnRouteMatched.apply(this, arguments);
-                }
-            }, this);
+            if(!!this.onRouteMatched) {
+                this.router.attachRouteMatched(this.onRouteMatched, this);
+            }
+            
+            if(!!this.onMyRouteMatched) {
+                this.router.attachRouteMatched(function(evt){
+                    var routeName = evt.getParameter("name");
+                    if(this.isMyRoute(routeName)) {
+                        this.onMyRouteMatched.apply(this, arguments);
+                    }
+                }, this);
+            }
+
         },
         _initCustomFilters: function(){
             if(!!this._customFiltersObj) this.setViewModelProperty('customFilters',this._customFiltersObj());
