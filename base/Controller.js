@@ -58,7 +58,11 @@ function extendController (sExtName, extImpl, baseName){
                     // When the route for the current view is matched
                     this.onMyRouteMatched && this.onMyRouteMatched.apply(this, arguments);
                 }
-                this.onRouteMatched && this.onRouteMatched.apply(this, arguments);
+                if(!!this.onRouteMatched) {
+                    if (!this._baseOnRouteMatched) this._baseOnRouteMatched = this.onRouteMatched;
+                    this.onRouteMatched = function(){}; // empty the handler to avoid calling twice
+                    this._baseOnRouteMatched.apply(this, arguments);
+                }
             }, this);
         },
         _initCustomFilters: function(){
@@ -130,6 +134,9 @@ function extendController (sExtName, extImpl, baseName){
         geti18nBundle: function(){
             var sComponentId = this.getComponentId();
             return sap.ui.component(sComponentId).getModel("i18n").getResourceBundle();
+        },
+        getText: function(sKey){
+            return this.geti18nBundle().getText(sKey);
         },
         toHome : function() {
             this.getRouter().navTo("home");

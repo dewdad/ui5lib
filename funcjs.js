@@ -486,22 +486,22 @@ function sort (prop, arr) {
  * @param index a reference passed in that will be set to -1 if the pair is not found or the obj is not indexable, or the index otherwise
  * @return {item: object, index: int}|null
  */
-function findByKey(obj, key, value){
-    if(!key || isEqual(typeof(obj[key])==='function' ? obj[key].call(obj) : obj[key], value )) {
+function findByKey(obj, key, value, bCall){
+    if(!key || isEqual(typeof(obj[key])==='function' && bCall ? obj[key].call(obj) : obj[key], value )) {
         return {item: obj, index:null};
     }
     if(!!obj.length){
-        return  arrayFindByKey(obj,key,value);
+        return  arrayFindByKey(obj,key,value, bCall);
     }
     return null;
 }
 
 
-function arrayFindByKey(array,key,value){
+function arrayFindByKey(array,key,value, bCall){
     if(!array || !array.length) return undefined;
     for (var i = 0, arrLen = array.length; i < arrLen; i++) {
         var item = array[i][key];
-        if(isEqual(typeof(item)==='function' ? item.call(array[i]) : item, value ) ){
+        if(isEqual(typeof(item)==='function' && bCall ? item.call(array[i]) : item, value ) ){
             return {item: array[i], index: i};
         }
     }
