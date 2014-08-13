@@ -135,8 +135,9 @@ function extendController (sExtName, extImpl, baseName){
             var sComponentId = this.getComponentId();
             return sap.ui.component(sComponentId).getModel("i18n").getResourceBundle();
         },
-        getText: function(sKey){
-            return this.geti18nBundle().getText(sKey);
+        getText: function(){
+            var i18nBundle = this.geti18nBundle();
+            return i18nBundle.getText.apply(i18nBundle, arguments);
         },
         toHome : function() {
             this.getRouter().navTo("home");
