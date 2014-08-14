@@ -138,12 +138,11 @@ function isJsonStr(str) {
     return true;
 }
 
-function trim (str) {
-    var	str = str.replace(/^\s\s*/, ''),
-        ws = /\s/,
-        i = str.length;
-    while (ws.test(str.charAt(--i)));
-    return str.slice(0, i + 1);
+function trim (str, delimiter) {
+    var delimiter = delimiter && ('\\'+delimiter) || '';
+    var part = "["+delimiter+"\\s]";
+    var regex = new RegExp("^"+part+"*|"+part+"*$",'g');
+    return str.replace(regex, '');
 }
 
 /**
