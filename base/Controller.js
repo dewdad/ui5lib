@@ -134,7 +134,7 @@ function extendController (sExtName, extImpl, baseName){
           return this.getView().getViewName();
         },
         isMyRoute: function(routeName){
-          var routeView = getObjProperty(this.getRouter(),"_oRoutes."+routeName+"._oConfig.view");
+          var routeView = getObjProperty(this.getRouter(),"_oRoutes/"+routeName+"/_oConfig/view", '/');
           return new RegExp(routeView+'$').test(this.getViewName());
         },
         getModelEntity: function(){
