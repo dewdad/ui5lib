@@ -332,7 +332,7 @@ sap.ui.model.odata.ODataListBinding.prototype.x_search = function(aFields, sQuer
                     var matches = /__SEARCHFILTER__(.*?)__SEARCHFILTER__%20eq%20'?([a-z,A-Z,0-9, ,-,]+)'?/mgi.exec(arguments[1]);
 
                     // TODO: make sure there are fields listed in the special search filter
-                    var filterColumns = $.map(matches[1].split('/'), function(v){
+                    var filterColumns = $.map(matches[1].split('|'), function(v){
                         return "substringof('"+matches[2]+"',"+v+")";
                     });
 
@@ -355,7 +355,7 @@ sap.ui.model.odata.ODataListBinding.prototype.x_search = function(aFields, sQuer
 
     if(!!sQuery) { // add the special search filter to be serialized on xhr open
         /*this.x_searchFilter =*/
-        var searchFilter = new sap.ui.model.Filter('__SEARCHFILTER__' + aFields.join('/') + '__SEARCHFILTER__', 'EQ', sQuery);
+        var searchFilter = new sap.ui.model.Filter('__SEARCHFILTER__' + aFields.join('|') + '__SEARCHFILTER__', 'EQ', sQuery);
         searchFilter.id = "__SEARCHFILTER__";
         this.x_addFilter(searchFilter);
     }else{
