@@ -25,6 +25,49 @@ this.ui5x = jQuery.extend((this.ui5x || {}),{
     }
 })(jQuery.sap.require);
 
+/**
+ * This function serves the as typed typed controllers, but provides allot more, it offers a simple extension mechanism from
+ * the first object produced by this method. It does not to override constructors and onInit methods, but rather chains them.
+ * @param sExtName
+ * @param extImpl
+ * @param baseName
+ * @param sType
+ */
+function ui5extend (sExtName, extImpl, baseName, sType){
+    sType = sType ||  baseName.split('.').pop().toLowerCase();
+    /* boilerplate code for typed Controller */
+    jQuery.sap.declare(sExtName);
+    jQuery.sap.declare({modName:sExtName, type:sType}); // declaring a special type of module
+//    var extension = getObjProperty(window,sExtName,false);
+    //eval(sExtName+' = function(){'+baseName+'.apply(this, arguments);}');
+    setProperty(this, function () { // the constructor
+        getObjProperty(window,baseName,false).apply(this, arguments);
+        var ctor = getObjProperty(extImpl,'constructor',false);
+        if(!!ctor){
+            ctor.apply(this, arguments);
+            //delete extImpl['constructor'];
+        }
+    }, sExtName);
+
+    jQuery.sap.require(baseName); // this is currently required, as the Controller is not loaded by default
+
+    getObjProperty(window,sExtName,false).prototype = jQuery.sap.newObject(getObjProperty(window,baseName,false).prototype); // chain the prototypes
+    /* end of boilerplate code for typed Controller */
+    getObjProperty(window,sExtName,false).extend = function(sExtendingName, oImpl) {
+        return ui5extend(sExtendingName, oImpl, sExtName);
+    };
+
+    getObjProperty(window,sExtName,false).prototype.onInit = function() {
+        try{getObjProperty(window,baseName,false).prototype.onInit.apply(this, arguments)}catch(e){}
+        var onInit = getObjProperty(extImpl, 'onInit', false);
+        if(!!onInit) onInit.apply(this, arguments);
+    };
+
+    $.each(extImpl, function(key,value){
+        if(!inArray(key, ['onInit', 'constructor'])) getObjProperty(window, sExtName, false).prototype[key] = value;
+    });
+};
+
 jQuery.sap.require("sap.ui.core.Element");
 jQuery.sap.require("sap.ui.model.Model");
 

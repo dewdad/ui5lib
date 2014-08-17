@@ -25,14 +25,71 @@ declareName = propertyGetSet = function(sPath, oContext, cDelimeter){
 };
 
 // JavaScript inheritance helper function
-function extend(extension, parent) {
+function extend(extension, parent, extPrototype, chainMethods) {
+    chainMethods = chainMethods ||[];
+    extPrototype = extPrototype || [];
     function I() {};
     I.prototype = parent.prototype;
+    var ctor = extension;
+    extension = function(){
+        parent.apply(this, arguments);
+        ctor.apply(this, arguments);
+    }
+
     extension.prototype = new I;
     extension.prototype.constructor = extension;
     extension.superprototype = parent.prototype;
+
+    /*chainMethods.forEach(function(sName){
+        extension.prototype[sName] = function() {
+            try {
+                parent.prototype[sName].apply(this, arguments)
+            } catch (e) {
+            }
+            var method = extension[sName];
+            if (!!method) method.apply(this, arguments);
+        }
+    });*/
+
+    for (var prop in extPrototype) {
+        if( extPrototype.hasOwnProperty( prop ) ) {
+            if(inArray(prop,chainMethods)){
+                extension.prototype[prop] = function() {
+                    try {
+                        parent.prototype[prop].apply(this, arguments)
+                    } catch (e) {
+                    }
+                    var method = extPrototype[prop];
+                    if (!!method) method.apply(this, arguments);
+                }
+            }else {
+                extension.prototype[prop] = extPrototype[prop];
+            }
+        }
+    }
+
     return extension;
 };
+
+function mashup(a, b, chainMethods){
+    chainMethods = chainMethods ||[];
+    for (var prop in b) {
+        var key = prop;
+        if(inArray(prop,chainMethods) && !!b[prop].call){
+            var aprop = a[key];
+            a[key] = function() {
+                try {
+                    b[key].apply(this, arguments)
+                } catch (e) {
+                }
+                if (!!aprop && !!aprop.call) aprop.apply(this, arguments);
+            }
+        }else {
+            a[key] = b[key];
+        }
+    }
+    return a;
+}
 
 function setLocationHash(hash){
     hash = hash.replace( /^#/, '' );
@@ -607,6 +664,7 @@ var validate={
  *
  * @param pValue
  * @param pArray
+ * @param {boolean} [true] Whether to return a boolean, if false it will return an index on success, -1 otherwise
  * @return {boolean}  true if elment is found in the array false otherwise
  */
 function inArray(value, aArray, bIsBool){

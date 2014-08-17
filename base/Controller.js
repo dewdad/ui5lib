@@ -1,45 +1,3 @@
-/**
- * This function serves the as typed typed controllers, but provides allot more, it offers a simple extension mechanism from
- * the first object produced by this method. It does not to override constructors and onInit methods, but rather chains them.
- * @param sExtName
- * @param extImpl
- * @param baseName
- */
-function extendController (sExtName, extImpl, baseName){
-    baseName = baseName || "sap.ui.core.mvc.Controller";
-    /* boilerplate code for typed Controller */
-    jQuery.sap.declare({modName:sExtName, type:"controller"}); // declaring a special type of module
-//    var extension = getObjProperty(window,sExtName,false);
-        //eval(sExtName+' = function(){'+baseName+'.apply(this, arguments);}');
-    setProperty(this, function () { // the constructor
-        getObjProperty(window,baseName,false).apply(this, arguments);
-        var ctor = getObjProperty(extImpl,'constructor',false);
-        if(!!ctor){
-            ctor.apply(this, arguments);
-            //delete extImpl['constructor'];
-        }
-    }, sExtName);
-
-    jQuery.sap.require("sap.ui.core.mvc.Controller"); // this is currently required, as the Controller is not loaded by default
-
-    //eval(sExtName+'.prototype = jQuery.sap.newObject('+baseName+'.prototype)'); // chain the prototypes
-    getObjProperty(window,sExtName,false).prototype = jQuery.sap.newObject(getObjProperty(window,baseName,false).prototype); // chain the prototypes
-    /* end of boilerplate code for typed Controller */
-    getObjProperty(window,sExtName,false).extend = function(sExtendingName, oImpl) {
-        return extendController(sExtendingName, oImpl, sExtName);
-    };
-
-    getObjProperty(window,sExtName,false).prototype.onInit = function() {
-        try{getObjProperty(window,baseName,false).prototype.onInit.apply(this, arguments)}catch(e){}
-        var onInit = getObjProperty(extImpl, 'onInit', false);
-        if(!!onInit) onInit.apply(this, arguments);
-    };
-
-    $.each(extImpl, function(key,value){
-        if(!inArray(key, ['onInit', 'constructor'])) getObjProperty(window, sExtName, false).prototype[key] = value;
-    });
-};
-
 (function(){
     jQuery.sap.require("sap.m.routing.RouteMatchedHandler");
     jQuery.sap.require("sap.ui.core.routing.Router");
@@ -209,5 +167,5 @@ function extendController (sExtName, extImpl, baseName){
 
     jQuery.sap.declare(resourceName);
     //sap.ui.core.mvc.Controller.extend(resourceName, baseController);
-    extendController(resourceName, baseController);
+    ui5extend(resourceName, baseController, "sap.ui.core.mvc.Controller");
 }.call(this));

@@ -1,0 +1,25 @@
+{
+  "name": "ui5lib",
+  "version": "0.0.1",
+  "description": "An addon library to complement SAP/Open-UI5 with productivity APIs and best practices to eliminate much configuration and redundant code. Provides extra and improves exsi",
+  "main": "HereMap.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/randelic/ui5lib.git"
+  },
+  "keywords": [
+    "sapui5",
+    "openui5",
+    "best-practices",
+    "tdg"
+  ],
+  "author": "Avital Ben-Natan",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/randelic/ui5lib/issues"
+  },
+  "homepage": "https://github.com/randelic/ui5lib"
+}
