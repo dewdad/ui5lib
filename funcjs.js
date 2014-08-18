@@ -1,3 +1,9 @@
+// fix console access for IE
+if (!window.console) window.console = {};
+if (!window.console.log) window.console.log = function () { };
+if (!window.console.debug) window.console.debug = function () { };
+if (!window.console.info) window.console.info = function () { };
+
 /**
  * Extends functional JavaScript in the browser. Escpecially suited for SAP/OpenUI5 applications.
  * @depdency jQuery
