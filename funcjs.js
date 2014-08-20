@@ -840,7 +840,7 @@ Date.prototype.add = function(nValue, sType) {
 /**
  * Compare dates
  * @param {Date} date
- * @return {Number} Results: -1 = current date is earlier than @date, 0 = current date is same as @date, 1 = current date is later than @date
+ * @return {Number} Results: -1 = this date is earlier than @date, 0 = current date is same as @date, 1 = this date is later than @date
  */
 Date.prototype.compare = function(date) {
 
@@ -864,10 +864,10 @@ Date.prototype.compare = function(date) {
  */
 Date.compare = function(d1, d2) {
 
-    if (typeof(d1) === STRING)
+    if (typeof(d1) === "string")
         d1 = d1.parseDate();
 
-    if (typeof(d2) === STRING)
+    if (typeof(d2) === "string")
         d2 = d2.parseDate();
 
     return d1.compare(d2);
