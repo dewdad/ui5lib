@@ -141,7 +141,7 @@
                     (sPath.charAt(0)==='/')
                         ?sPath
                         :('/'+modelRootProperty+((typeof(sPath)!=='string')?'':'/'+sPath)),
-                        oValue || sPath);
+                        (oValue !==undefined && oValue) || sPath);
                 oModel.checkUpdate();
                 return ret;
             };
