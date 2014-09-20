@@ -259,6 +259,104 @@ sap.ui.core.Element.prototype.x_GetLabelText = function(){
     return this.x_GetLabel().text().replace(/^[\s:]+|[\s:]+$/g,''); // trim and "user:" becomes "user"
 };
 
+sap.ui.model.SimpleType.extend("ui5lib.model.BoolInvert", {
+    formatValue: function(oValue) {
+        return !oValue;
+    },
+    parseValue: function(oValue) {
+        return !oValue;
+    },
+    validateValue: function(oValue) {
+        if (typeof oValue !== "boolean") {
+            throw new sap.ui.model.ValidateException("BoolInvert must be boolean");
+        }
+    }
+});
+
+$.sap.require('sap.m.ColumnListItem');
+$.sap.declare('ui5lib.EditListItem');
+sap.m.ColumnListItem.extend("ui5lib.EditListItem",{
+    metadata:{
+        events:{
+            edit: {},
+            save: {},
+            cancell: {}
+        }
+    },
+    /*constructor:function(){
+      console.log('ui5lib.EditListItem.ctor', this, arguments);
+      return ui5lib.EditListItem.prototype.constructor.apply(this, arguments);
+    },*/
+    init:function(){
+        /*var parent = this.getParent();
+        if(!parent.getModel('___EDITMODE___')){
+            parent.x_SetJSModel({editMode: false}, '___EDITMODE___')
+        }*/
+        /*<!--<HBox>
+            <Button icon="sap-icon://edit" press="onEditPress" visible="{path:'view>/aggr/editMode', type:'ui5lib.model.BoolInvert'}" />
+            <HBox visible="{view>/aggr/editMode}">
+                <Button icon="sap-icon://save" press="onEditPress"/>
+            </HBox>
+        </HBox>-->*/
+        var self = this;
+        var parent;
+        var intervId = setInterval(function(){
+            if(!!(parent = self.getParent())){
+              if(!!parent.___LISTEDITITEM___){
+                clearInterval(intervId);
+              }else{
+                  parent.addColumn(new sap.m.Column({width: "4em"}));
+                  parent.___LISTEDITITEM___ = true;
+                  clearInterval(intervId);
+              }
+            }
+        }, 10)
+
+    },
+    onBeforeRendering: function(){
+        var self = this;
+        var parent = this.getParent();
+        if(!parent.getModel('___EDITMODE___')){
+            parent.x_SetJSModel({editMode: false}, '___EDITMODE___')
+        }
+        this.addCell(new sap.m.HBox({
+            items: [
+                new sap.m.Button({icon:"sap-icon://edit", visible:{path:'___EDITMODE___>/editMode', type:'ui5lib.model.BoolInvert'}, press: function(evt){
+                    self.fireEdit(evt);
+                    if(!evt.bPreventDefault){
+                        self.onEdit(evt);
+                    }
+                }}),
+                new sap.m.HBox({width:"84px", justifyContent:"SpaceBetween", visible: "{___EDITMODE___>/editMode}", items:[
+                    new sap.m.Button({type:"Accept", icon:"sap-icon://save", press: function(evt){
+                        self.fireSave(evt);
+                        if(!evt.bPreventDefault){
+                            self.onSave(evt);
+                        }
+                    }}),
+                    new sap.m.Button({type:"Reject", icon:"sap-icon://decline", press: function(evt){
+                        self.fireCancel(evt);
+                        if(!evt.bPreventDefault){
+                            self.onCancel(evt);
+                        }
+                    }})
+                ]})
+            ]
+        }));
+    },
+    onEdit: function(evt){
+        this.x_SetJSModel({editMode:true},'___EDITMODE___');
+        this.getParent().invalidate();
+    },
+    addCell: function(oCtrl){
+        if(!!oCtrl.fireChange){
+            oCtrl.bindProperty("enabled", "___EDITMODE___>/editMode"); //,{path:"___EDITMODE___>/editMode"});
+        }
+      return sap.m.ColumnListItem.prototype.addCell.apply(this, arguments);
+    },
+    renderer : {}
+});
+
 /**!!!           End Element            !!!**/
 
 $.sap.require('sap.ui.model.odata.ODataListBinding');
