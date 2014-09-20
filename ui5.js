@@ -123,7 +123,7 @@ $.sap.declare('mui');
             }catch(e){
                 console.log(e);
                 if(guessType) {
-                    viewObj.type = 'JS';
+                    viewObj.type = viewObj.type===sap.ui.core.mvc.ViewType.XML? sap.ui.core.mvc.ViewType.JS: sap.ui.core.mvc.ViewType.XML;
                     try {
                         oView = sap.ui.view(viewObj);
                     }catch(e){

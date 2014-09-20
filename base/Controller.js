@@ -95,6 +95,28 @@
           var routeView = getObjProperty(this.getRouter(),"_oRoutes/"+routeName+"/_oConfig/view", '/');
           return new RegExp(routeView+'$').test(this.getViewName());
         },
+        setModel: function(){
+            var view = this.getView();
+            if(!!view){
+              return view.x_SetJSModel.apply(view, arguments);
+            }
+        },
+        getJSModel: function(){
+            var view = this.getView();
+            var oModel = view.getModel.apply(view, arguments);
+            if(!!view){
+                return (oModel instanceof sap.uiext.model.json.JSONModel || oModel instanceof sap.ui.model.json.JSONModel)? oModel: undefined;
+            }
+        },
+        setData: function(oData,sModelName){
+            var jsModel = this.getJSModel(sModelName);
+            var data = isArray(oData)? {data:oData}: oData;
+            if(!jsModel){
+                this.setModel(data);
+            }else{
+                jsModel.setData(data);
+            }
+        },
         getModelEntity: function(){
             return this._modelEntity || this.myName();
         },

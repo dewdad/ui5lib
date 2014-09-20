@@ -117,10 +117,9 @@ sap.ui.core.Element.prototype.x_GetSetModel  = function(modelName){
     return this.getModel();
 };
 
-sap.ui.core.Element.prototype.x_SetJSModel  = function(oData){
+sap.ui.core.Element.prototype.x_SetJSModel  = function(oData, sName){
     var jsmodel = new sap.uiext.model.json.JSONModel(oData);
-    jsmodel.setSizeLimit(500);
-    this.setModel(jsmodel);
+    this.setModel(jsmodel, sName);
     return this;
 };
 
@@ -529,19 +528,6 @@ sap.ui.model.json.JSONModel.extend("sap.uiext.model.json.JSONModel", {
      * @param {String | Object} [oContext]
      * @return {Object}
      */
-    getProperty: function(sPath, oContext){
-        var args = arguments;
-        sPath = !!sPath.getPath? sPath.getPath(): sPath; // fix to string if context object
-        if(!!oContext && typeof(oContext) == 'string'){
-            sPath = oContext+'/'+sPath;
-            args = [sPath];
-        }
-        // prefix sPath with '/' to make absolute path
-        if(!args[1] && args[0][0]!=='/'){
-            args[0] = '/'+args[0];
-        }
-        return sap.ui.model.json.JSONModel.prototype.getProperty.apply(this, args);
-    },
     setData: function(){
         sap.ui.model.json.JSONModel.prototype.setData.apply(this, arguments);
         this.fireEvent('propertyChange', {sPath:'', oValue:arguments[0], oContext:'/'});
