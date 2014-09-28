@@ -85,6 +85,10 @@
           var router = this.getRouter();
           return router.navTo.apply(router, arguments);
         },
+        navBack: function(){
+            var router = this.getRouter();
+            if (!!router.myNavBack) return router.myNavBack.apply(router, arguments);
+        },
         myName: function(){
             return this.getView().getControllerName().split('.').pop();
         },
