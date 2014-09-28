@@ -243,6 +243,17 @@ $.sap.declare('mui');
             var instance = new sap.m.ScrollContainer();
             _controlArrayConfig(arguments, instance);
             return instance;
+        },
+        ErrorMsg: function(sMsg, sTitle){
+            $.sap.require("sap.m.MessageBox");
+            return mui.Msg(sMsg, sap.m.MessageBox.Icon.ERROR, (sTitle || "Alert"));
+        },
+        Msg: function(sMsg, sType, sTitle){
+            $.sap.require("sap.m.MessageBox");
+            return sap.m.MessageBox.show(sMsg, {
+                icon : sType || sap.m.MessageBox.Icon.None,
+                title : sTitle
+            });
         }
     };
 }())

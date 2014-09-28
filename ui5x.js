@@ -87,6 +87,22 @@ sap.ui.core.Element.prototype.getBoundProperty = function(sPath){
     return undefined;
 };
 
+sap.ui.core.Element.prototype.bindingProxy = function(){
+    var oContext = this.getBindingContext();
+    if(!oContext || !oContext.oModel.proxy) return;
+    this.__prevBindingContext = oContext; // store for revert
+    var proxyModel = oContext.oModel.proxy(oContext.sPath);
+    this.setModel(proxyModel).bindElement('/data');
+    return this;
+};
+
+sap.ui.core.Element.prototype.bindingRevert = function(){
+    if(!this.__prevBindingContext) return;
+    this.setModel(this.__prevBindingContext.oModel).bindElement(this.__prevBindingContext.sPath);
+    delete this.__prevBindingContext;
+    return this;
+};
+
 sap.ui.core.Element.prototype.x_AddUpdateRow = function(oData,sRowBindingPath, sIdProperty){
     var model = this.getModel();
     sIdProperty = sIdProperty || 'id';
@@ -121,10 +137,6 @@ sap.ui.core.Element.prototype.x_SetJSModel  = function(oData, sName){
     var jsmodel = new sap.uiext.model.json.JSONModel(oData);
     this.setModel(jsmodel, sName);
     return this;
-};
-
-sap.ui.core.Element.prototype.x_IfNotSetModel = function(oModel){
-    if(!this.hasModel()) this.setModel(oModel);
 };
 
 /**
@@ -274,18 +286,21 @@ sap.ui.model.SimpleType.extend("ui5lib.model.BoolInvert", {
 });
 
 $.sap.require('sap.m.ColumnListItem');
-$.sap.declare('ui5lib.EditListItem');
-sap.m.ColumnListItem.extend("ui5lib.EditListItem",{
+$.sap.declare('ui5lib.ColumnListEditItem');
+sap.m.ColumnListItem.extend("ui5lib.ColumnListEditItem",{
     metadata:{
+        properties:{
+            saveTimeOut: {type : "int", defaultValue: 3000}
+        },
         events:{
             edit: {},
             save: {},
-            cancell: {}
+            cancel: {}
         }
     },
     /*constructor:function(){
-      console.log('ui5lib.EditListItem.ctor', this, arguments);
-      return ui5lib.EditListItem.prototype.constructor.apply(this, arguments);
+      console.log('ui5lib.ColumnListEditItem.ctor', this, arguments);
+      return ui5lib.ColumnListEditItem.prototype.constructor.apply(this, arguments);
     },*/
     init:function(){
         /*var parent = this.getParent();
@@ -305,7 +320,7 @@ sap.m.ColumnListItem.extend("ui5lib.EditListItem",{
               if(!!parent.___LISTEDITITEM___){
                 clearInterval(intervId);
               }else{
-                  parent.addColumn(new sap.m.Column({width: "4em"}));
+                  parent.addColumn(new sap.m.Column({width: "4rem"}));
                   parent.___LISTEDITITEM___ = true;
                   clearInterval(intervId);
               }
@@ -317,7 +332,7 @@ sap.m.ColumnListItem.extend("ui5lib.EditListItem",{
         var self = this;
         var parent = this.getParent();
         if(!parent.getModel('___EDITMODE___')){
-            parent.x_SetJSModel({editMode: false}, '___EDITMODE___')
+            parent.x_SetJSModel({editMode: false}, '___EDITMODE___');
         }
         this.addCell(new sap.m.HBox({
             items: [
@@ -329,30 +344,87 @@ sap.m.ColumnListItem.extend("ui5lib.EditListItem",{
                 }}),
                 new sap.m.HBox({width:"84px", justifyContent:"SpaceBetween", visible: "{___EDITMODE___>/editMode}", items:[
                     new sap.m.Button({type:"Accept", icon:"sap-icon://save", press: function(evt){
-                        self.fireSave(evt);
-                        if(!evt.bPreventDefault){
-                            self.onSave(evt);
-                        }
+                        self.onSave(evt);
                     }}),
                     new sap.m.Button({type:"Reject", icon:"sap-icon://decline", press: function(evt){
-                        self.fireCancel(evt);
-                        if(!evt.bPreventDefault){
-                            self.onCancel(evt);
-                        }
+                        self.onCancel(evt);
                     }})
                 ]})
             ]
         }));
     },
     onEdit: function(evt){
-        this.x_SetJSModel({editMode:true},'___EDITMODE___');
-        this.getParent().invalidate();
+        this.bindingProxy();
+        this.setEditMode(true);
+        this.enableInputs(true);
+    },
+    onSave: function(evt){
+        var self = this;
+        evt.oSource = this;
+        evt.mParameters.id = this.getId();
+        evt.data = this.getBoundProperty();
+        evt.success = $.proxy(this.onSaveSuccess, this);
+        evt.error = $.proxy(this.onSaveError, this);
+
+        this.setBusy(true);
+        this.fireSave(evt);
+        this._saveTimer = true;
+        setTimeout(function(){
+            if(!!self._saveTimer) self.onSaveError();
+        }, this.getSaveTimeOut());
+    },
+    onSaveSuccess: function(sMsg){
+        this._saveTimer = false;
+        jQuery.sap.require("sap.m.MessageToast");
+        sap.m.MessageToast.show(sMsg || "The save operation completed successfully.");
+        this.setBusy(false);
+        this.setEditMode(false);
+    },
+    onSaveError: function(sMsg){
+        this._saveTimer = false;
+        mui.ErrorMsg(sMsg || "The save operation failed!");
+        this.setBusy(false);
+    },
+    onCancel: function(evt){
+        this.fireCancel(evt);
+        this.bindingRevert();
+        this.enableInputs(false);
+        this.setEditMode(false);
     },
     addCell: function(oCtrl){
         if(!!oCtrl.fireChange){
-            oCtrl.bindProperty("enabled", "___EDITMODE___>/editMode"); //,{path:"___EDITMODE___>/editMode"});
+            if(oCtrl.setEditable){
+                oCtrl.setEditable(false);
+            }else oCtrl.setEnabled(false);
+
+            this.__inputs = this.__inputs || [];
+            this.__inputs.push(oCtrl);
         }
-      return sap.m.ColumnListItem.prototype.addCell.apply(this, arguments);
+        return sap.m.ColumnListItem.prototype.addCell.apply(this, arguments);
+    },
+    setEditMode: function(bEditMode){
+        if(bEditMode){
+            this.x_SetJSModel({editMode:true},'___EDITMODE___');
+        }else{
+            this.setModel(null, '___EDITMODE___');
+        }
+    },
+    enableInputs: function(bEnable){
+        if(!!this.__inputs){
+            this.__inputs.forEach(function(e){
+                if(e.setEditable){
+                    e.setEditable(bEnable);
+                }else e.setEnabled(bEnable);
+            });
+        }
+    },
+    setBusy: function(bBusy){
+        try{
+            $('#'+this.getId()+' .sapMHBox').control()[0].setBusy(bBusy,0);
+        }catch(e){
+            console.debug(e);
+        }
+        this.enableInputs(bBusy);
     },
     renderer : {}
 });
@@ -554,6 +626,11 @@ sap.ui.model.Model.prototype.x_SetData = function(dataObj,sPath){
 };
 
 sap.ui.model.json.JSONModel.extend("sap.uiext.model.json.JSONModel", {
+    metadata:{
+        events: {
+            "propertyChange":{}
+        }
+    },
 
     validateInput: function(notify){
         if(!isEmpty(getObjProperty(this, 'validation_errors'))){
@@ -577,47 +654,11 @@ sap.ui.model.json.JSONModel.extend("sap.uiext.model.json.JSONModel", {
      * @returns {*|void|sap.ui.base.ManagedObject|boolean|sap.uiext.model.json.JSONModel}
      */
     setProperty: function(sPath, oValue, oContext){
-        var args = arguments;
-        var context = oContext || this;
-        var ret = this;
-        sPath = !!sPath.getPath? sPath.getPath(): sPath; // fix to string if context object
-//        if(!!oContext){
-//            if(typeof(oContext) == 'string'){
-//                sPath = oContext+'/'+sPath;
-//                oContext = undefined;
-//            }else{
-//                if(/^\//.test(sPath)){
-//                    sPath = sPath.substr(1, sPath.length);
-//                }
-//            }
-//        }
+        var ret;
+        console.debug(this, arguments);
+        ret = sap.ui.model.json.JSONModel.prototype.setProperty.apply(this, arguments);
 
-        //if(!args[2]){ // if sPath does not prefix with '/' fix it
-        if(!/^\//.test(sPath)){
-            args[0] = '/'+args[0];
-        }
-        args = [sPath, oValue];
-        //}
-
-        // Create path if it does not exist
-        propertyGetSet(parentPath(sPath), this.oData, '/');
-
-        if(this.getProperty(sPath, oContext)!==oValue){ // TODO: a fix for combo update bindings introduced with SAPUI 1.6
-            ret = sap.ui.model.json.JSONModel.prototype.setProperty.apply(this, args);
-        }
-
-//        if(!!oContext){
-//            // TODO: migrate from string to object context from  SAPUI 1.4-1.6
-//            var contextPath = sui.getBindingStr(oContext);
-//        }
-//        if(!contextPath){
-//            var sPathParts = sPath.split('/');
-//            var partsLen = sPathParts.length;
-//            contextPath = (sPathParts.slice(0, partsLen-1)).join('/');
-//            sPath = (sPathParts.slice(partsLen-1,partsLen))[0];
-//        }
-
-        this.fireEvent('propertyChange', {sPath:sPath, oValue:oValue, /*oContext:oContext, sContext:contextPath,*/ bindPath:/*!!contextPath? contextPath+'/'+sPath:*/ sPath});
+        this.fireEvent('propertyChange', {sPath:sPath, oValue:oValue, oContext:oContext});
         return ret;
     },
     /**
