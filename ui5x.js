@@ -320,7 +320,7 @@ sap.m.ColumnListItem.extend("ui5lib.ColumnListEditItem",{
               if(!!parent.___LISTEDITITEM___){
                 clearInterval(intervId);
               }else{
-                  parent.addColumn(new sap.m.Column({width: "4rem"}));
+                  parent.addColumn(new sap.m.Column({width: "86px"}));
                   parent.___LISTEDITITEM___ = true;
                   clearInterval(intervId);
               }
