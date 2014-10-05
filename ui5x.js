@@ -655,13 +655,12 @@ sap.ui.model.json.JSONModel.extend("sap.uiext.model.json.JSONModel", {
      */
     setProperty: function(sPath, oValue, oContext){
         var ret;
-        if(!/^\//.test(sPath)){
-            args[0] = '/'+args[0];
+        if(!/^\//.test(arguments[0])){
+            arguments[0] = '/'+arguments[0];
         }
 
         // Create path if it does not exist
         propertyGetSet(parentPath(sPath), this.oData, '/');
-        console.debug(this, arguments);
         ret = sap.ui.model.json.JSONModel.prototype.setProperty.apply(this, arguments);
 
         this.fireEvent('propertyChange', {sPath:sPath, oValue:oValue, oContext:oContext});
