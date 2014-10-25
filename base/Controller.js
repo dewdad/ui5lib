@@ -2,6 +2,7 @@
     jQuery.sap.require("sap.m.routing.RouteMatchedHandler");
     jQuery.sap.require("sap.ui.core.routing.Router");
 
+    // This is to make certain that an routMatched listener can only be attached once
     (function(fn){
         sap.ui.core.routing.Router.prototype.attachRouteMatched = function(){
             if(!this._RouteMatchedSubscribers) this._RouteMatchedSubscribers = [];
@@ -99,10 +100,17 @@
           var routeView = getObjProperty(this.getRouter(),"_oRoutes/"+routeName+"/_oConfig/view", '/');
           return new RegExp(routeView+'$').test(this.getViewName());
         },
-        setModel: function(){
+        /**
+         * @deprecated please use setJSModel instead
+         * @return {*}
+         */
+        setModel: function(){ //
+            return this.setJSModel.apply(this, arguments);
+        },
+        setJSModel: function(){
             var view = this.getView();
             if(!!view){
-              return view.x_SetJSModel.apply(view, arguments);
+                return view.x_SetJSModel.apply(view, arguments);
             }
         },
         getJSModel: function(){

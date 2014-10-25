@@ -730,3 +730,23 @@ ui5x.addModLoadHandler("sap.ui.core.Fragment", function() {
     }(sap.ui.fragment));
 
 });
+
+// TODO: analyse enriching behaviour on fly
+ui5x.addModLoadHandler("sap.m.ViewSettingsDialog", function() {
+    (function (fn) {
+        sap.m.ViewSettingsDialog = function () {
+            debugger;
+
+            var controller = $.grep(arguments, function (v) {
+                return v instanceof sap.ui.core.mvc.Controller;
+            })[0];
+            var fragment = fn.apply(sap.ui, arguments);
+            if (!!controller){
+                var view = controller.getView();
+                view.addDependent(fragment); // fix fragment inheritance
+                if(!!fragment._dialog) view.addDependent(fragment._dialog); // fix fragment-dialog inheritance
+            }
+            return fragment;
+        }
+    }(sap.m.ViewSettingsDialog));
+});
