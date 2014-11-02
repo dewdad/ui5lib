@@ -328,6 +328,12 @@ sap.m.ColumnListItem.extend("ui5lib.ColumnListEditItem",{
         }, 10)
 
     },
+    destroyClonedHeaders: function(){
+        try {
+            var toRet = sap.m.ColumnListItem.prototype.destroyClonedHeaders.apply(this, arguments);
+            return toRet;
+        }catch(e){}
+    },
     onBeforeRendering: function(){
         var self = this;
         var parent = this.getParent();
