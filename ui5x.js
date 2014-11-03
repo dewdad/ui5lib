@@ -285,6 +285,136 @@ sap.ui.model.SimpleType.extend("ui5lib.model.BoolInvert", {
     }
 });
 
+$.sap.require('sap.ui.table.TreeTable');
+$.sap.declare('ui5lib.EditTreeTable');
+sap.ui.table.TreeTable.extend("ui5lib.EditTreeTable", ui5lib.EditableTree = {
+    metadata: {
+        properties: {
+            saveTimeOut: {type: "int", defaultValue: 3000},
+            editModelProperty: {type: "string", defaultValue: "__edit"}, // property to set a row to edit mode
+            editableModelProperty: {type: "string", defaultValue: ""} // which records/rows can be edited
+        },
+        events: {
+            edit: {},
+            save: {},
+            cancel: {}
+        }
+    },
+    init: function () {
+        this._hasEditActionColumn = false;
+        this.__proto__.__proto__.init.apply(this, arguments);
+    },
+    addColumn: function (oCol) {
+        var template = oCol.getTemplate();
+        if (!!template && !!template.fireChange) {
+            template.bindProperty("editable", this.getEditModelProperty());
+        }
+        return this.__proto__.__proto__.addColumn.apply(this, arguments);
+    },
+    onBeforeRendering: function () {
+        var self = this;
+        var tableId = this.getId();
+        var editableProperty = this.getEditableModelProperty();
+        var editProperty = this.getEditModelProperty();
+
+        if (!this._hasEditActionColumn) {
+            this.setModel(new sap.uiext.model.json.JSONModel({__editing: false}), tableId);
+
+            var oHbox = new sap.ui.commons.layout.HorizontalLayout();
+
+            function addActionContent() {
+                if (!editableProperty || getObjProperty(this.getBoundProperty(), editableProperty)) {
+                    //this.addContent(new sap.ui.commons.Label({text: "Web Site"}));
+                    this.addContent(
+                        new sap.ui.commons.layout.HorizontalLayout({content: [
+                            new sap.ui.commons.Button({
+                                icon: 'sap-icon://edit',
+                                lite: true,
+                                enabled: {path: tableId + ">/__editing", type: 'ui5lib.model.BoolInvert'},
+                                //style: sap.ui.commons.ButtonStyle.Emph,
+                                visible: {path: editProperty, type: 'ui5lib.model.BoolInvert'},
+                                press: function (e) {
+                                    var model = this.getModel();
+                                    var path = this.getBindingContext().getPath();
+                                    var obj = model.getProperty(path);
+                                    model.addRevision('editPressed');
+                                    model.setProperty(path + "/" + editProperty, true);
+                                    self.setEditMode(true);
+                                    //sap.m.MessageToast.show('Edit: ' + JSON.stringify(obj));
+                                }
+                            }),
+                            new sap.ui.commons.layout.HorizontalLayout({visible: "{" + editProperty + "}", content: [
+                                new sap.ui.commons.Button({style: "Accept", lite: true, icon: "sap-icon://save", press: function (evt) {
+                                    self.onSave(evt, this.getBindingContext());
+                                }}),
+                                new sap.ui.commons.Button({style: "Reject", lite: true, icon: "sap-icon://decline", press: function (evt) {
+                                    self.onCancel(evt, this.getBindingContext());
+                                }})
+                            ]})
+                        ]})
+                    );
+                    return true;
+                }
+                else return false;
+            }
+
+            if (!!editableProperty) { // TODO: [TreeTable render bug] When the tree renders hidden controls in during branch expand those controls flicker and then become invisible
+                oHbox.bindProperty("visible", {path: editableProperty, formatter: addActionContent})
+            } else {
+                addActionContent.call(oHbox);
+            }
+
+            this.addColumn(new sap.ui.table.Column({
+                width: "100px",
+                hAlign: "Center",
+                label: new sap.ui.commons.Label({text: ""}),
+                template: oHbox
+            }));
+            this._hasEditActionColumn = true;
+        }
+    },
+    onCancel: function (evt, oContext) {
+        this.fireCancel(evt, oContext);
+        var model = oContext.getModel();
+        var path = oContext.getPath();
+        var obj = model.getProperty(path);
+        model.restoreRevision('editPressed');
+        model.setProperty(path + "/" + this.getEditModelProperty(), false);
+        this.setEditMode(false);
+    },
+    onSave: function (evt, oContext) {
+        var self = this;
+        evt.oSource = this;
+        evt.mParameters.id = this.getId();
+        evt.data = oContext.getObject();
+        evt.success = $.proxy(this.onSaveSuccess, this);
+        evt.error = $.proxy(this.onSaveError, this);
+
+        this.setBusy(true);
+        this.fireSave({eventData:evt, dataContext:oContext});
+        this._saveTimer = true;
+        setTimeout(function () {
+            if (!!self._saveTimer) self.onSaveError();
+        }, this.getSaveTimeOut());
+    },
+    onSaveSuccess: function (sMsg) {
+        this._saveTimer = false;
+        jQuery.sap.require("sap.m.MessageToast");
+        sap.m.MessageToast.show(sMsg || "The save operation completed successfully.");
+        this.setBusy(false);
+        this.setEditMode(false);
+    },
+    onSaveError: function (sMsg) {
+        this._saveTimer = false;
+        mui.ErrorMsg(sMsg || "The save operation failed!");
+        this.setBusy(false);
+    },
+    setEditMode: function(bEditMode){
+        this.getModel(this.getId()).setProperty("__editing", bEditMode);
+    },
+    renderer: {}
+});
+
 $.sap.require('sap.m.ColumnListItem');
 $.sap.declare('ui5lib.ColumnListEditItem');
 sap.m.ColumnListItem.extend("ui5lib.ColumnListEditItem",{
