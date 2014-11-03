@@ -435,7 +435,7 @@ sap.m.ColumnListItem.extend("ui5lib.ColumnListEditItem",{
     renderer : {}
 });
 
-/**!!!           End Element            !!!**/
+/**!!!           End Element           !!!**/
 
 $.sap.require('sap.ui.model.odata.ODataListBinding');
 
@@ -636,6 +636,31 @@ sap.ui.model.json.JSONModel.extend("sap.uiext.model.json.JSONModel", {
         events: {
             "propertyChange":{}
         }
+    },
+
+    addRevision: function(key){
+        var oData = clone(this.getData());
+        this.__revisions = this.__revisions || [];
+
+        if(!!key){
+            if(typeof key === "string"){}
+            else key = btoa(JSON.stringify(key)); // convert type to reconstructable key
+            this.__revisions[key] = oData;
+        }else{
+            this.__revisions.push(oData);
+        }
+    },
+
+    restoreRevision: function(key){
+        if(!this.__revisions) return undefined;
+        var oData =  !!key?
+            (
+                typeof key === "string"?
+                    this.__revisions[key]:
+                    this.__revisions[btoa(JSON.stringify(key))]
+            ):
+            this.__revisions.pop();
+        if(!isEmpty(oData)) this.setData(oData);
     },
 
     validateInput: function(notify){
