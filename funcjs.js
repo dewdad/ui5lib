@@ -425,9 +425,10 @@ var isPrimitive = function ( value ) {
     typeof value === 'string');
 }
 
-function isObject(value){
-    return $.isPlainObject(value);
+function isPlainObject(a){
+    return $.isPlainObject(a);
 }
+isObject = isPlainObject;
 
 function isArray(value){
     return value instanceof Array;
@@ -446,27 +447,28 @@ function extractTemplate(src, template, splice){
 
     if(!src) return undefined;
 
-    var extraction=$.isArray(template)?[]:{}, tmpval;
+    var extraction=isArray(src)?[]:{}, tmpval;
 
-    if($.isArray(template)){
-        if(!$.isArray(src)) return false;
+    if(isArray(template) && isArray(src)){
         for (var i = 0, srcLen = src.length ; i < srcLen ; i++) {
             if(tmpval=extractTemplate(src[i],template[0], splice))
                 extraction[i]=tmpval;
         }
     }else{
-        for( var key in template )
-            if( src.hasOwnProperty(key) ){
-                if(isObject(template[key]) || $.isArray(template[key])){
-                    if(isObject(src[key]) || $.isArray(template[key]))
+        for( var key in template ) {
+            if(isArray(template)) key = template[key];
+            if (src.hasOwnProperty(key)) {
+                if (isPlainObject(template[key]) || isArray(template[key])) {
+                    if (isPlainObject(src[key]) || isArray(template[key]))
                         extraction[key] = extractTemplate(src[key], template[key], splice);
-                }else{
+                } else {
                     extraction[key] = src[key];
-                    if(splice){
+                    if (splice) {
                         delete src[key];
                     }
                 }
             }
+        }
     }
     return extraction;
 }
