@@ -69,8 +69,17 @@ $.sap.declare('mui');
                 }
             });
         },
-        getDateInstance: function(sStyle){
-            return sap.ui.core.format.DateFormat.getDateInstance( {style : (sStyle || "medium")} );
+        getDateInstance: function(oFormatOptions){
+            return sap.ui.core.format.DateFormat.getDateInstance( oFormatOptions );
+        },
+        /**
+         *
+         * @param object oFormatOptions
+         * @param string oFormatOptions.pattern
+         * @param string oFormatOptions.style
+         */
+        formatDate: function(oDate, oFormatOptions, bUTC){
+            return sap.ui.core.format.DateFormat.getDateInstance(oFormatOptions).format(oDate, bUTC)
         },
         /**
          * @dependecies Date.prototype.getWeek

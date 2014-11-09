@@ -307,7 +307,8 @@ sap.ui.table.TreeTable.extend("ui5lib.EditTreeTable", ui5lib.EditableTree = {
     addColumn: function (oCol) {
         var template = oCol.getTemplate();
         if (!!template && !!template.fireChange) {
-            template.bindProperty("editable", this.getEditModelProperty());
+            if(!!template.setEditable) template.bindProperty("editable", this.getEditModelProperty());
+            else template.bindProperty("enabled", this.getEditModelProperty());
         }
         return this.__proto__.__proto__.addColumn.apply(this, arguments);
     },

@@ -43,15 +43,16 @@
             if(!!this._customFiltersObj) this.setViewModelProperty('customFilters',this._customFiltersObj());
         },
         /**
-         * Note the at for this to initialize the valid values required by a controller there must be
-         * an implementation of loadValidValues in on the inheritance path
+         * Note that for valid values init to occur, there must be
+         * an implementation of loadValidValues on an inheriting object that implements loadValidValues method.
+         * The loadValidValues must return an array of valid values
          * @private
          */
         _initValidValues: function(){
-            if(!this.loadValidValues) return; // Check for implementation of loadValidValues
+            var vVFields;
+            var self = this;
+            if(!this.loadValidValues || !(vVFields=this._validValues)) return; // Check for implementation of loadValidValues
 
-            var vVFields = this._validValues;
-            var that = this;
             if(!!vVFields){
                 vVFields.forEach(function(el){
                     var entity, field, validValues;
@@ -59,12 +60,12 @@
                     entity = el.entity;
                     field = el.field;
 
-                    validValues = that.getViewModelProperty('/validValues/'+entity+'/'+field);
+                    validValues = self.getViewModelProperty('/validValues/'+entity+'/'+field);
 
                     if(!validValues){
                         // !! validValues needs to be implemented on the Application's base controller
-                        that.loadValidValues(entity, field, function(validValues){
-                            that.setViewModelProperty('/validValues/'+entity+'/'+field, validValues);
+                        self.loadValidValues(entity, field, function(validValues){
+                            self.setViewModelProperty('/validValues/'+entity+'/'+field, validValues);
                         });
                     }
                 });
