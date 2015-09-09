@@ -1,4 +1,4 @@
-console.log("ui5x.js is loaded");
+console.log("ui5x2.js is loaded");
 this.ui5x = jQuery.extend((this.ui5x || {}),{
     _modLoadHandlers: {},
     _checkedModules: {},
@@ -79,13 +79,13 @@ sap.ui.core.Element.prototype.setPropertyFire = function(sPropertyName, oValue, 
 };
 
 sap.ui.core.Element.prototype.getContextProperty =
-sap.ui.core.Element.prototype.getBoundProperty = function(sPath){
-    var context = this.getBindingContext();
-    if(!!context){
-        return context.oModel.getProperty(context.sPath+(!!sPath? ('/'+sPath): ''));
-    }
-    return undefined;
-};
+    sap.ui.core.Element.prototype.getBoundProperty = function(sPath){
+        var context = this.getBindingContext();
+        if(!!context){
+            return context.oModel.getProperty(context.sPath+(!!sPath? ('/'+sPath): ''));
+        }
+        return undefined;
+    };
 
 sap.ui.core.Element.prototype.bindingProxy = function(){
     var oContext = this.getBindingContext();
@@ -127,10 +127,10 @@ sap.ui.core.Element.prototype.x_SetData = function(oData,sPath, sModelName){
 
 sap.ui.core.Element.prototype.x_GetSetModel  = function(modelName){
     if(!this.getModel(modelName)){
-        var jsmodel = new sap.uiext.model.json.JSONModel();
+        var jsmodel = new sap.uiext.model.json.JSONModel({});
         this.setModel(jsmodel, modelName);
     }
-    return this.getModel();
+    return this.getModel(modelName);
 };
 
 sap.ui.core.Element.prototype.x_SetJSModel  = function(oData, sName){
@@ -430,31 +430,31 @@ sap.m.ColumnListItem.extend("ui5lib.ColumnListEditItem",{
         }
     },
     /*constructor:function(){
-      console.log('ui5lib.ColumnListEditItem.ctor', this, arguments);
-      return ui5lib.ColumnListEditItem.prototype.constructor.apply(this, arguments);
-    },*/
+     console.log('ui5lib.ColumnListEditItem.ctor', this, arguments);
+     return ui5lib.ColumnListEditItem.prototype.constructor.apply(this, arguments);
+     },*/
     init:function(){
         /*var parent = this.getParent();
-        if(!parent.getModel('___EDITMODE___')){
-            parent.x_SetJSModel({editMode: false}, '___EDITMODE___')
-        }*/
+         if(!parent.getModel('___EDITMODE___')){
+         parent.x_SetJSModel({editMode: false}, '___EDITMODE___')
+         }*/
         /*<!--<HBox>
-            <Button icon="sap-icon://edit" press="onEditPress" visible="{path:'view>/aggr/editMode', type:'ui5lib.model.BoolInvert'}" />
-            <HBox visible="{view>/aggr/editMode}">
-                <Button icon="sap-icon://save" press="onEditPress"/>
-            </HBox>
-        </HBox>-->*/
+         <Button icon="sap-icon://edit" press="onEditPress" visible="{path:'view>/aggr/editMode', type:'ui5lib.model.BoolInvert'}" />
+         <HBox visible="{view>/aggr/editMode}">
+         <Button icon="sap-icon://save" press="onEditPress"/>
+         </HBox>
+         </HBox>-->*/
         var self = this;
         var parent;
         var intervId = setInterval(function(){
             if(!!(parent = self.getParent())){
-              if(!!parent.___LISTEDITITEM___){
-                clearInterval(intervId);
-              }else{
-                  parent.addColumn(new sap.m.Column({width: "86px"}));
-                  parent.___LISTEDITITEM___ = true;
-                  clearInterval(intervId);
-              }
+                if(!!parent.___LISTEDITITEM___){
+                    clearInterval(intervId);
+                }else{
+                    parent.addColumn(new sap.m.Column({width: "86px"}));
+                    parent.___LISTEDITITEM___ = true;
+                    clearInterval(intervId);
+                }
             }
         }, 10)
 
@@ -579,12 +579,12 @@ $.sap.require('sap.ui.model.odata.ODataListBinding');
 })(sap.ui.model.odata.ODataListBinding.prototype.createFilterParams);
 // removed in favor of hijacking ODataListBinding.prototype.createFilterParams, as it occurs after the aFilters member is updated
 /*(function(fn){
-    sap.ui.model.odata.ODataListBinding.prototype.filter = function(aFilters){
-        if(!!this._staticFilters)
-            aFilters = (aFilters||[]).concat(this._staticFilters.concat(getValuesByKeys(this._staticFilters)) || []);
-        return fn.apply(this, arguments);
-    };
-})(sap.ui.model.odata.ODataListBinding.prototype.filter);*/
+ sap.ui.model.odata.ODataListBinding.prototype.filter = function(aFilters){
+ if(!!this._staticFilters)
+ aFilters = (aFilters||[]).concat(this._staticFilters.concat(getValuesByKeys(this._staticFilters)) || []);
+ return fn.apply(this, arguments);
+ };
+ })(sap.ui.model.odata.ODataListBinding.prototype.filter);*/
 
 /**
  * adds static filters to the list binding object that will persist across filter calls
@@ -665,13 +665,13 @@ sap.ui.model.odata.ODataListBinding.prototype.x_search = function(aFields, sQuer
     if(!sap.ui.model.odata.ODataListBinding.prototype.x_searchSupport){
         // Overriding filter on oBinding to check for the search filter before issuing a filter on the binding
         /*(function(filter){
-            sap.ui.model.odata.ODataListBinding.prototype.filter = function(aFilters){
-              if(!!this.x_searchFilter){
-                  aFilters.push(this.x_searchFilter);
-              }
-              return filter.apply(this, arguments);
-            };
-        })(sap.ui.model.odata.ODataListBinding.prototype.filter);*/
+         sap.ui.model.odata.ODataListBinding.prototype.filter = function(aFilters){
+         if(!!this.x_searchFilter){
+         aFilters.push(this.x_searchFilter);
+         }
+         return filter.apply(this, arguments);
+         };
+         })(sap.ui.model.odata.ODataListBinding.prototype.filter);*/
 
         // Augmenting XHR open to serialize the special search filter from the binding's filter string
         (function() {
@@ -697,10 +697,10 @@ sap.ui.model.odata.ODataListBinding.prototype.x_search = function(aFields, sQuer
 
     var aFilters = this.aFilters;
     //var aSorters = this.aSorters;
-    
+
     // clear out the search filter
     /*aFilters = $.grep(aFilters, function(v){ if (v.sPath.search(/__/)<0) return true; });
-    this.x_searchFilter= null;*/
+     this.x_searchFilter= null;*/
 
     if(!!sQuery) { // add the special search filter to be serialized on xhr open
         /*this.x_searchFilter =*/
@@ -715,6 +715,21 @@ sap.ui.model.odata.ODataListBinding.prototype.x_search = function(aFields, sQuer
 };
 
 /**!!!          JSON Model              !!!**/
+
+sap.ui.model.Model.prototype.x_SetData = function(dataObj, sPath, bMerge){
+    var oData = this.getData() || {};
+    var dataClone = clone(dataObj);
+
+    if(!isEmpty(sPath))
+        setProperty(oData, dataClone, sPath, '/'); // this provides mirroring where as the merge supplied by SUI5 only supplies updating
+    else
+        oData = dataClone;
+
+    if(arguments.length>2) this.setData(oData, bMerge);
+    else this.setData(oData);
+
+    this.checkUpdate();
+};
 
 /**
  *
@@ -747,19 +762,6 @@ sap.ui.model.Model.prototype.x_AddUpdateRow = function(oData, sRowsBindPath, sId
     this.x_SetData(oData, sPath);
     // return row count
     return (objIndex>-1? modelRowsLen: modelRowsLen+1);
-};
-
-sap.ui.model.Model.prototype.x_SetData = function(dataObj,sPath){
-    var oData = this.getData();
-    var dataClone = clone(dataObj);
-
-    if(!isEmpty(sPath))
-        setProperty(oData, dataClone, sPath, '/'); // this provides mirroring where as the merge supplied by SUI5 only supplies updating
-    else
-        oData = dataClone;
-
-    this.setData(oData);
-    this.checkUpdate();
 };
 
 sap.ui.model.json.JSONModel.extend("sap.uiext.model.json.JSONModel", {
@@ -874,21 +876,22 @@ sap.ui.model.json.JSONModel.extend("sap.uiext.model.json.JSONModel", {
 
 // The following 3 closures are required to fix the model inheritance tree for fragments and fragment-dialogs (sadly these lie in different branches currently)
 
-ui5x.addModLoadHandler("sap.ui.core.Fragment", function() {
+/*
+ ui5x.addModLoadHandler("sap.ui.core.Fragment", function() {
 
-    (function (fn) {
-        sap.ui.fragment = function () {
-            var controller = $.grep(arguments, function (v) {
-                return v instanceof sap.ui.core.mvc.Controller;
-            })[0];
-            var fragment = fn.apply(null, arguments);
-            if (!!controller){
-                var view = controller.getView();
-                view.addDependent(fragment); // fix fragment inheritance
-                if(!!fragment._dialog) view.addDependent(fragment._dialog); // fix fragment-dialog inheritance
-            }
-            return fragment;
-        }
-    }(sap.ui.fragment));
+ (function (fn) {
+ sap.ui.fragment = function () {
+ var controller = $.grep(arguments, function (v) {
+ return v instanceof sap.ui.core.mvc.Controller;
+ })[0];
+ var fragment = fn.apply(null, arguments);
+ if (!!controller){
+ var view = controller.getView();
+ view.addDependent(fragment); // fix fragment inheritance
+ if(!!fragment._dialog) view.addDependent(fragment._dialog); // fix fragment-dialog inheritance
+ }
+ return fragment;
+ }
+ }(sap.ui.fragment));
 
-});
+ });*/

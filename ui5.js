@@ -156,8 +156,9 @@ $.sap.declare('mui');
             }
             return types[i];
         },
-        getModelData: function(src){
-            return src.getModel().getProperty(src.getBindingContext().getPath());
+        getModelData: function(src, modelName){
+            var oModel = !!modelName? src.getModel(modelName): src.getModel();
+            return oModel.getProperty(src.getBindingContext(modelName).sPath);
         },
         getRootResourceName: function(){
             var ret = undefined;

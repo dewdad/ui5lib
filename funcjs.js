@@ -161,6 +161,10 @@ function trim (str, delimiter) {
  * @returns {*}
  */
 function setProperty(obj, value, path, delimiter) {
+
+    if(!!!obj) throw new Error("Cannot set property on null, Must pass an object in the 1st argument");
+    if(!!!value) throw new Error("Must pass a value in the 2nd argument");
+
     if(!!!arguments[2]){
         obj = value;
         return obj;
