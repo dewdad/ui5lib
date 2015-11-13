@@ -1,18 +1,26 @@
+/**
+ * An alternative m.Input that replaces the value-help button with a dynamic reset button. This control was developed
+ * for the reason that no proper mobile autosuggest with dropdown exists in the framework yet
+ */
 sap.ui.define(['jquery.sap.global', 'sap/m/Input'],
     function(jQuery, Parent) {
         "use strict";
 
         var Control = Parent.extend('ui5lib.controls.Input', {
                 init: function() {
+                    Parent.prototype.init.apply(this,arguments);
                     this.setShowValueHelp(true);
                     this.attachLiveChange(this.checkInputForReset);
                 },
 
-                renderer: {},
+                renderer: {}, /*function(){
+                    debugger;
+                    return Parent.prototype.renderer.apply(this, arguments);
+                },*/
 
                 onAfterRendering: function() {
-                    if (sap.m.Input.prototype.onAfterRendering) {
-                        sap.m.Input.prototype.onAfterRendering.apply(this, arguments);
+                    if (Parent.prototype.onAfterRendering) ;{
+                        Parent.prototype.onAfterRendering.apply(this, arguments);
                     }
 
                     var icon = this._getValueHelpIcon();
@@ -25,8 +33,6 @@ sap.ui.define(['jquery.sap.global', 'sap/m/Input'],
                 },
 
                 checkInputForReset: function(evt){
-                    //var args = arguments;
-                    //debugger;
                     var sVal = typeof(evt)==='string'? evt: evt.getParameter("newValue")
                     if(!sVal){
                         this.setShowValueHelp(false);
@@ -43,7 +49,10 @@ sap.ui.define(['jquery.sap.global', 'sap/m/Input'],
                 },
 
                 fireValueHelpRequest: function(){
+                    this.destroySuggestionItems();
+                    this.setShowSuggestion(false);
                     this.setValue("");
+                    this.setShowSuggestion(true);
                 }
             });
 
