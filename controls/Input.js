@@ -19,7 +19,7 @@ sap.ui.define(['jquery.sap.global', 'sap/m/Input'],
                 },*/
 
                 onAfterRendering: function() {
-                    if (Parent.prototype.onAfterRendering) ;{
+                    if (Parent.prototype.onAfterRendering) {
                         Parent.prototype.onAfterRendering.apply(this, arguments);
                     }
 
