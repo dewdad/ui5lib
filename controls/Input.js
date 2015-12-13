@@ -65,6 +65,7 @@ sap.ui.define(['jquery.sap.global', 'sap/m/Input'],
                 this.destroySuggestionItems();
                 this.setShowSuggestion(false);
                 this.setValue("");
+                this.fireChange({value: ''});
                 this.setShowSuggestion(true);
             }
         });
