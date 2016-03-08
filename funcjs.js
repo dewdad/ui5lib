@@ -671,6 +671,19 @@ var validate={
     }
 };
 
+function doIntersect(arr1,arr2){
+    try{
+        var i = arr1.length, item;
+
+        while(item = arr1[--i]){
+            if(inArray(item, arr2)) return true;
+        }
+    }catch(e){
+        console.debug(e);
+    }
+    return false;
+}
+
 /**
  *
  * @param pValue
