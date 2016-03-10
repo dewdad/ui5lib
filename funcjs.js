@@ -258,6 +258,19 @@ function getObjProperty(obj, path, bCall, delimiter){
     return bCall && !!parent[propPath] && !!parent[propPath].call? parent[propPath](): parent[propPath];
 }
 
+function hashString(str) {
+    var hash = 5381,
+        i = str.length
+
+    while (i)
+        hash = (hash * 33) ^ str.charCodeAt(--i)
+
+    /* JavaScript does bitwise operations (like XOR, above) on 32-bit signed
+     * integers. Since we want the results to be always positive, convert the
+     * signed int to an unsigned by doing an unsigned bitshift. */
+    return hash >>> 0;
+}
+
 function createUUID() {
     // http://www.ietf.org/rfc/rfc4122.txt
     var s = [];
