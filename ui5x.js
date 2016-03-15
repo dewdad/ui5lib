@@ -894,4 +894,16 @@ sap.ui.model.json.JSONModel.extend("sap.uiext.model.json.JSONModel", {
  }
  }(sap.ui.fragment));
 
- });*/
+ });
+
+ui5x.addModLoadHandler("sap.ui.model.Context", function() {
+
+    (function (fn) {
+        sap.ui.model.Context = function () {
+            debugger;
+            return fn;
+        }
+    }(sap.ui.model.Context));
+
+});
+ */

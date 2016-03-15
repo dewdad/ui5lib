@@ -537,7 +537,10 @@ function indexOfKeyValue(array,key,value){
 //   example 3: dirname('/dir/test/');
 //   returns 3: '/dir'
 var parentPath, dirname;
-parentPath = dirname = function(sPath){
+parentPath = dirname = function(sPath, upLevels){
+    if(!!upLevels){
+        return parentPath(parentPath(sPath), --upLevels);
+    }
     return sPath.replace(/\\/g, '/').replace(/\/[^\/]*\/?$/, '');
 }
 

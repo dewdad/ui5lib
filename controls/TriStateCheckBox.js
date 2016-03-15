@@ -40,6 +40,22 @@ sap.ui.define(['jquery.sap.global', 'sap/m/CheckBox'],
                     );
                 },
 
+                onChange: function() {
+                    var allChildren = this.getNestedCheckBoxes(), numChildren = allChildren.length;
+                    if (this.getSelect()) {
+                        for (var i = 0; i < numChildren; i++) {
+                            allChildren[i].setSelect(true);
+                            this._selectedChildren = numChildren;
+                        }
+                    }
+                    else {
+                        for (var i = 0; i < numChildren; i++) {
+                            allChildren[i].setSelect(false);
+                            this._selectedChildren = 0;
+                        }
+                    }
+                },
+
                 onAfterRendering: function () {
                     var $this = this.$();
                     $this.find('div').removeClass('sapMCbMarkChecked');
