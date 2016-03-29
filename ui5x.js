@@ -285,7 +285,7 @@ sap.ui.model.SimpleType.extend("ui5lib.model.BoolInvert", {
     }
 });
 
-$.sap.require('sap.ui.table.TreeTable');
+/*$.sap.require('sap.ui.table.TreeTable');
 $.sap.declare('ui5lib.EditTreeTable');
 sap.ui.table.TreeTable.extend("ui5lib.EditTreeTable", ui5lib.EditableTree = {
     metadata: {
@@ -429,21 +429,21 @@ sap.m.ColumnListItem.extend("ui5lib.ColumnListEditItem",{
             cancel: {}
         }
     },
-    /*constructor:function(){
+    /!*constructor:function(){
      console.log('ui5lib.ColumnListEditItem.ctor', this, arguments);
      return ui5lib.ColumnListEditItem.prototype.constructor.apply(this, arguments);
-     },*/
+     },*!/
     init:function(){
-        /*var parent = this.getParent();
+        /!*var parent = this.getParent();
          if(!parent.getModel('___EDITMODE___')){
          parent.x_SetJSModel({editMode: false}, '___EDITMODE___')
-         }*/
-        /*<!--<HBox>
+         }*!/
+        /!*<!--<HBox>
          <Button icon="sap-icon://edit" press="onEditPress" visible="{path:'view>/aggr/editMode', type:'ui5lib.model.BoolInvert'}" />
          <HBox visible="{view>/aggr/editMode}">
          <Button icon="sap-icon://save" press="onEditPress"/>
          </HBox>
-         </HBox>-->*/
+         </HBox>-->*!/
         var self = this;
         var parent;
         var intervId = setInterval(function(){
@@ -564,7 +564,7 @@ sap.m.ColumnListItem.extend("ui5lib.ColumnListEditItem",{
         this.enableInputs(bBusy);
     },
     renderer : {}
-});
+});*/
 
 /**!!!           End Element           !!!**/
 
