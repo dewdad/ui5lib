@@ -350,19 +350,30 @@ function clone(src) {
  */
 
 function arrayInitDecorator(sPathToArray, keys, values, callback){
-    var args = {sPathToArray:sPathToArray, keys:(isArray(keys)? keys: [keys]), values: (isArray(values)? values: [values]), callback: callback};
+    var args = {sPathToArray:sPathToArray, keys:keys, values: values, callback: callback};
 
     // function that initializes the array in the given path with the corresponding keys and values
     return function(){
-        getObjProperty(this, args.sPathToArray).forEach(function(arrayElement){
+        arrayInit(getObjProperty(this, args.sPathToArray), args.keys, args.values);
+        /*getObjProperty(this, args.sPathToArray).forEach(function(arrayElement){
             var arrElement = arrayElement;
             args.keys.forEach(function(key,i){
-                setProperty(arrayElement, args.values[i], key);
+                setProperty(arrElement, args.values[i], key);
             });
-        });
+        });*/
         if(args.callback) args.callback.apply(this, arguments);
         return this;
     }
+}
+
+function arrayInit(arr, keys, values){
+    var args = {keys:(isArray(keys)? keys: [keys]), values: (isArray(values)? values: [values])};
+    arr.forEach(function(arrayElement){
+        var scopeArrElement = arrayElement;
+        args.keys.forEach(function(key,i){
+            setProperty(scopeArrElement, args.values[i], key);
+        });
+    });
 }
 
 function removeObjProperty(obj, path, delimiter){
