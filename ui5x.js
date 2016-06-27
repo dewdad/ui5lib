@@ -876,26 +876,26 @@ sap.ui.model.json.JSONModel.extend("sap.uiext.model.json.JSONModel", {
 
 // The following 3 closures are required to fix the model inheritance tree for fragments and fragment-dialogs (sadly these lie in different branches currently)
 
-/*
+
  ui5x.addModLoadHandler("sap.ui.core.Fragment", function() {
 
  (function (fn) {
- sap.ui.fragment = function () {
- var controller = $.grep(arguments, function (v) {
- return v instanceof sap.ui.core.mvc.Controller;
- })[0];
- var fragment = fn.apply(null, arguments);
- if (!!controller){
- var view = controller.getView();
- view.addDependent(fragment); // fix fragment inheritance
- if(!!fragment._dialog) view.addDependent(fragment._dialog); // fix fragment-dialog inheritance
- }
- return fragment;
- }
- }(sap.ui.fragment));
+     sap.ui.fragment = function () {
+         var controller = $.grep(arguments, function (v) {
+                return v instanceof sap.ui.core.mvc.Controller;
+             })[0];
+         var fragment = fn.apply(null, arguments);
+         if (!!controller){
+         var view = controller.getView();
+         view.addDependent(fragment); // fix fragment inheritance
+         if(!!fragment._dialog) view.addDependent(fragment._dialog); // fix fragment-dialog inheritance
+         }
+         return fragment;
+         }
+     }(sap.ui.fragment));
 
  });
-
+ /*
 ui5x.addModLoadHandler("sap.ui.model.Context", function() {
 
     (function (fn) {
