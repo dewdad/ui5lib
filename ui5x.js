@@ -127,6 +127,7 @@ sap.ui.core.Element.prototype.x_SetData = function(oData,sPath, sModelName){
 
 sap.ui.core.Element.prototype.x_GetSetModel  = function(modelName){
     if(!this.getModel(modelName)){
+        jQuery.sap.require("sap.ui.model.json.JSONModel");
         var jsmodel = new sap.uiext.model.json.JSONModel({});
         this.setModel(jsmodel, modelName);
     }
@@ -134,6 +135,7 @@ sap.ui.core.Element.prototype.x_GetSetModel  = function(modelName){
 };
 
 sap.ui.core.Element.prototype.x_SetJSModel  = function(oData, sName){
+    jQuery.sap.require("sap.ui.model.json.JSONModel");
     var jsmodel = new sap.uiext.model.json.JSONModel(oData);
     this.setModel(jsmodel, sName);
     return this;
@@ -284,287 +286,6 @@ sap.ui.model.SimpleType.extend("ui5lib.model.BoolInvert", {
         }
     }
 });
-
-/*$.sap.require('sap.ui.table.TreeTable');
-$.sap.declare('ui5lib.EditTreeTable');
-sap.ui.table.TreeTable.extend("ui5lib.EditTreeTable", ui5lib.EditableTree = {
-    metadata: {
-        properties: {
-            saveTimeOut: {type: "int", defaultValue: 3000},
-            editModelProperty: {type: "string", defaultValue: "__edit"}, // property to set a row to edit mode
-            editableModelProperty: {type: "string", defaultValue: ""} // which records/rows can be edited
-        },
-        events: {
-            edit: {},
-            save: {},
-            cancel: {}
-        }
-    },
-    init: function () {
-        this._hasEditActionColumn = false;
-        this.__proto__.__proto__.init.apply(this, arguments);
-    },
-    addColumn: function (oCol) {
-        var template = oCol.getTemplate();
-        if (!!template && !!template.fireChange) {
-            if(!!template.setEditable) template.bindProperty("editable", this.getEditModelProperty());
-            else template.bindProperty("enabled", this.getEditModelProperty());
-        }
-        return this.__proto__.__proto__.addColumn.apply(this, arguments);
-    },
-    onBeforeRendering: function () {
-        var self = this;
-        var tableId = this.getId();
-        var editableProperty = this.getEditableModelProperty();
-        var editProperty = this.getEditModelProperty();
-
-        if (!this._hasEditActionColumn) {
-            this.setModel(new sap.uiext.model.json.JSONModel({__editing: false}), tableId);
-
-            var oHbox = new sap.ui.commons.layout.HorizontalLayout();
-
-            function addActionContent() {
-                if (!editableProperty || getObjProperty(this.getBoundProperty(), editableProperty)) {
-                    //this.addContent(new sap.ui.commons.Label({text: "Web Site"}));
-                    this.addContent(
-                        new sap.ui.commons.layout.HorizontalLayout({content: [
-                            new sap.ui.commons.Button({
-                                icon: 'sap-icon://edit',
-                                lite: true,
-                                enabled: {path: tableId + ">/__editing", type: 'ui5lib.model.BoolInvert'},
-                                //style: sap.ui.commons.ButtonStyle.Emph,
-                                visible: {path: editProperty, type: 'ui5lib.model.BoolInvert'},
-                                press: function (e) {
-                                    var model = this.getModel();
-                                    var path = this.getBindingContext().getPath();
-                                    var obj = model.getProperty(path);
-                                    model.addRevision('editPressed');
-                                    model.setProperty(path + "/" + editProperty, true);
-                                    self.setEditMode(true);
-                                    //sap.m.MessageToast.show('Edit: ' + JSON.stringify(obj));
-                                }
-                            }),
-                            new sap.ui.commons.layout.HorizontalLayout({visible: "{" + editProperty + "}", content: [
-                                new sap.ui.commons.Button({style: "Accept", lite: true, icon: "sap-icon://save", press: function (evt) {
-                                    self.onSave(evt, this.getBindingContext());
-                                }}),
-                                new sap.ui.commons.Button({style: "Reject", lite: true, icon: "sap-icon://decline", press: function (evt) {
-                                    self.onCancel(evt, this.getBindingContext());
-                                }})
-                            ]})
-                        ]})
-                    );
-                    return true;
-                }
-                else return false;
-            }
-
-            if (!!editableProperty) { // TODO: [TreeTable render bug] When the tree renders hidden controls in during branch expand those controls flicker and then become invisible
-                oHbox.bindProperty("visible", {path: editableProperty, formatter: addActionContent})
-            } else {
-                addActionContent.call(oHbox);
-            }
-
-            this.addColumn(new sap.ui.table.Column({
-                width: "100px",
-                hAlign: "Center",
-                label: new sap.ui.commons.Label({text: ""}),
-                template: oHbox
-            }));
-            this._hasEditActionColumn = true;
-        }
-    },
-    onCancel: function (evt, oContext) {
-        this.fireCancel(evt, oContext);
-        var model = oContext.getModel();
-        var path = oContext.getPath();
-        var obj = model.getProperty(path);
-        model.restoreRevision('editPressed');
-        model.setProperty(path + "/" + this.getEditModelProperty(), false);
-        this.setEditMode(false);
-    },
-    onSave: function (evt, oContext) {
-        var self = this;
-        evt.oSource = this;
-        evt.mParameters.id = this.getId();
-        evt.data = oContext.getObject();
-        evt.success = $.proxy(this.onSaveSuccess, this);
-        evt.error = $.proxy(this.onSaveError, this);
-
-        this.setBusy(true);
-        this.fireSave({eventData:evt, dataContext:oContext});
-        this._saveTimer = true;
-        setTimeout(function () {
-            if (!!self._saveTimer) self.onSaveError();
-        }, this.getSaveTimeOut());
-    },
-    onSaveSuccess: function (sMsg) {
-        this._saveTimer = false;
-        jQuery.sap.require("sap.m.MessageToast");
-        sap.m.MessageToast.show(sMsg || "The save operation completed successfully.");
-        this.setBusy(false);
-        this.setEditMode(false);
-    },
-    onSaveError: function (sMsg) {
-        this._saveTimer = false;
-        mui.ErrorMsg(sMsg || "The save operation failed!");
-        this.setBusy(false);
-    },
-    setEditMode: function(bEditMode){
-        this.getModel(this.getId()).setProperty("__editing", bEditMode);
-    },
-    renderer: {}
-});
-
-$.sap.require('sap.m.ColumnListItem');
-$.sap.declare('ui5lib.ColumnListEditItem');
-sap.m.ColumnListItem.extend("ui5lib.ColumnListEditItem",{
-    metadata:{
-        properties:{
-            saveTimeOut: {type : "int", defaultValue: 3000}
-        },
-        events:{
-            edit: {},
-            save: {},
-            cancel: {}
-        }
-    },
-    /!*constructor:function(){
-     console.log('ui5lib.ColumnListEditItem.ctor', this, arguments);
-     return ui5lib.ColumnListEditItem.prototype.constructor.apply(this, arguments);
-     },*!/
-    init:function(){
-        /!*var parent = this.getParent();
-         if(!parent.getModel('___EDITMODE___')){
-         parent.x_SetJSModel({editMode: false}, '___EDITMODE___')
-         }*!/
-        /!*<!--<HBox>
-         <Button icon="sap-icon://edit" press="onEditPress" visible="{path:'view>/aggr/editMode', type:'ui5lib.model.BoolInvert'}" />
-         <HBox visible="{view>/aggr/editMode}">
-         <Button icon="sap-icon://save" press="onEditPress"/>
-         </HBox>
-         </HBox>-->*!/
-        var self = this;
-        var parent;
-        var intervId = setInterval(function(){
-            if(!!(parent = self.getParent())){
-                if(!!parent.___LISTEDITITEM___){
-                    clearInterval(intervId);
-                }else{
-                    parent.addColumn(new sap.m.Column({width: "86px"}));
-                    parent.___LISTEDITITEM___ = true;
-                    clearInterval(intervId);
-                }
-            }
-        }, 10)
-
-    },
-    destroyClonedHeaders: function(){
-        try {
-            var toRet = sap.m.ColumnListItem.prototype.destroyClonedHeaders.apply(this, arguments);
-            return toRet;
-        }catch(e){}
-    },
-    onBeforeRendering: function(){
-        var self = this;
-        var parent = this.getParent();
-        if(!parent.getModel('___EDITMODE___')){
-            parent.x_SetJSModel({editMode: false}, '___EDITMODE___');
-        }
-        this.addCell(new sap.m.HBox({
-            items: [
-                new sap.m.Button({icon:"sap-icon://edit", visible:{path:'___EDITMODE___>/editMode', type:'ui5lib.model.BoolInvert'}, press: function(evt){
-                    self.fireEdit(evt);
-                    if(!evt.bPreventDefault){
-                        self.onEdit(evt);
-                    }
-                }}),
-                new sap.m.HBox({width:"84px", justifyContent:"SpaceBetween", visible: "{___EDITMODE___>/editMode}", items:[
-                    new sap.m.Button({type:"Accept", icon:"sap-icon://save", press: function(evt){
-                        self.onSave(evt);
-                    }}),
-                    new sap.m.Button({type:"Reject", icon:"sap-icon://decline", press: function(evt){
-                        self.onCancel(evt);
-                    }})
-                ]})
-            ]
-        }));
-    },
-    onEdit: function(evt){
-        this.bindingProxy();
-        this.setEditMode(true);
-        this.enableInputs(true);
-    },
-    onSave: function(evt){
-        var self = this;
-        evt.oSource = this;
-        evt.mParameters.id = this.getId();
-        evt.data = this.getBoundProperty();
-        evt.success = $.proxy(this.onSaveSuccess, this);
-        evt.error = $.proxy(this.onSaveError, this);
-
-        this.setBusy(true);
-        this.fireSave(evt);
-        this._saveTimer = true;
-        setTimeout(function(){
-            if(!!self._saveTimer) self.onSaveError();
-        }, this.getSaveTimeOut());
-    },
-    onSaveSuccess: function(sMsg){
-        this._saveTimer = false;
-        jQuery.sap.require("sap.m.MessageToast");
-        sap.m.MessageToast.show(sMsg || "The save operation completed successfully.");
-        this.setBusy(false);
-        this.setEditMode(false);
-    },
-    onSaveError: function(sMsg){
-        this._saveTimer = false;
-        mui.ErrorMsg(sMsg || "The save operation failed!");
-        this.setBusy(false);
-    },
-    onCancel: function(evt){
-        this.fireCancel(evt);
-        this.bindingRevert();
-        this.enableInputs(false);
-        this.setEditMode(false);
-    },
-    addCell: function(oCtrl){
-        if(!!oCtrl.fireChange){
-            if(oCtrl.setEditable){
-                oCtrl.setEditable(false);
-            }else oCtrl.setEnabled(false);
-
-            this.__inputs = this.__inputs || [];
-            this.__inputs.push(oCtrl);
-        }
-        return sap.m.ColumnListItem.prototype.addCell.apply(this, arguments);
-    },
-    setEditMode: function(bEditMode){
-        if(bEditMode){
-            this.x_SetJSModel({editMode:true},'___EDITMODE___');
-        }else{
-            this.setModel(null, '___EDITMODE___');
-        }
-    },
-    enableInputs: function(bEnable){
-        if(!!this.__inputs){
-            this.__inputs.forEach(function(e){
-                if(e.setEditable){
-                    e.setEditable(bEnable);
-                }else e.setEnabled(bEnable);
-            });
-        }
-    },
-    setBusy: function(bBusy){
-        try{
-            $('#'+this.getId()+' .sapMHBox').control()[0].setBusy(bBusy,0);
-        }catch(e){
-            console.debug(e);
-        }
-        this.enableInputs(bBusy);
-    },
-    renderer : {}
-});*/
 
 /**!!!           End Element           !!!**/
 
@@ -764,118 +485,123 @@ sap.ui.model.Model.prototype.x_AddUpdateRow = function(oData, sRowsBindPath, sId
     return (objIndex>-1? modelRowsLen: modelRowsLen+1);
 };
 
-sap.ui.model.json.JSONModel.extend("sap.uiext.model.json.JSONModel", {
-    metadata:{
-        events: {
-            "propertyChange":{}
-        }
-    },
-
-    addRevision: function(key){
-        var oData = clone(this.getData());
-        this.__revisions = this.__revisions || [];
-
-        if(!!key){
-            if(typeof key === "string"){}
-            else key = btoa(JSON.stringify(key)); // convert type to reconstructable key
-            this.__revisions[key] = oData;
-        }else{
-            this.__revisions.push(oData);
-        }
-    },
-
-    restoreRevision: function(key){
-        if(!this.__revisions) return undefined;
-        var oData =  !!key?
-            (
-                typeof key === "string"?
-                    this.__revisions[key]:
-                    this.__revisions[btoa(JSON.stringify(key))]
-            ):
-            this.__revisions.pop();
-        if(!isEmpty(oData)) this.setData(oData);
-    },
-
-    validateInput: function(notify){
-        if(!isEmpty(getObjProperty(this, 'validation_errors'))){
-            if(!!notify){
-                var messages = [];
-                for(var errElem in this.validation_errors){
-                    // TODO?: make inner loop to display messages for elements
-                    messages.push(this.validation_errors[errElem].messages[0]);
-                }
-                if(!!sui) sui.input_validation.alert(messages);
-            }
-            return false;
-        }
-        return true;
-    },
-    /**
-     *
-     * @param sPath Absolute path inside the oData member of the model or the object passed through "oContext" param
-     * @param oValue Value to write to sPath in the model object
-     * @param oContext [optional]
-     * @returns {*|void|sap.ui.base.ManagedObject|boolean|sap.uiext.model.json.JSONModel}
-     */
-    setProperty: function(sPath, oValue, oContext){
-        var ret;
-        if(!/^\//.test(arguments[0])){
-            arguments[0] = '/'+arguments[0];
-        }
-
-        // Create path if it does not exist
-        propertyGetSet(parentPath(sPath), this.oData, '/');
-        ret = sap.ui.model.json.JSONModel.prototype.setProperty.apply(this, arguments);
-
-        this.fireEvent('propertyChange', {sPath:sPath, oValue:oValue, oContext:oContext});
-        return ret;
-    },
-    /**
-     * the path to the property
-     * @param {String | Object} sPath
-     * @param {String | Object} [oContext]
-     * @return {Object}
-     */
-    setData: function(){
-        sap.ui.model.json.JSONModel.prototype.setData.apply(this, arguments);
-        this.fireEvent('propertyChange', {sPath:'', oValue:arguments[0], oContext:'/'});
-    },
-    /**
-     * Creates a subset of the model which is a proxy of it, changes will not affect the original model
-     * unless commitChanges as been called on the proxy
-     */
-    proxy: function(sPath){
-        var proxiedValue = this.getProperty(sPath||'/');
-        var proxyModel = new sap.uiext.model.json.JSONModel({data:clone(proxiedValue)});
-        proxyModel._dataSource = {model: this, path: sPath || '/'};
-        return proxyModel;
-    },
-    revert: function(){
-        var dataSrc = this.getDataSource();
-        var srcModel = dataSrc.model;
-        if(!!srcModel){
-            this.setProperty('data', clone(srcModel.getProperty(dataSrc.path)));
-        }
-    },
-    getDataSource: function(){return this._dataSource || {model:undefined, path:undefined};},
-    commitChanges: function(){
-
-    },
-    removeFrom: function(sPath){
-        removeObjProperty(this.getData(),sPath,'/');
-        this.checkUpdate();
-        var delPathArr = sPath.split('/');
-        var changedPath = delPathArr.slice(0,delPathArr.length-1).join('/');
-        this.fireEvent('propertyChange', {sPath:changedPath, oValue:null, oContext:'/', bindPath:changedPath});
-    },
-    renderer : {} // an empty renderer by convention inherits the parent renderer
-});
 /**!!!           END JSON Model             !!!**/
 
 /**!!!           Start Framework Fiddling             !!!**/
 
 // The following 3 closures are required to fix the model inheritance tree for fragments and fragment-dialogs (sadly these lie in different branches currently)
 
+
+ui5x.addModLoadHandler("sap.ui.model.json.JSONModel", function() {
+
+    sap.ui.model.json.JSONModel.extend("sap.uiext.model.json.JSONModel", {
+        metadata:{
+            events: {
+                "propertyChange":{}
+            }
+        },
+
+        addRevision: function(key){
+            var oData = clone(this.getData());
+            this.__revisions = this.__revisions || [];
+
+            if(!!key){
+                if(typeof key === "string"){}
+                else key = btoa(JSON.stringify(key)); // convert type to reconstructable key
+                this.__revisions[key] = oData;
+            }else{
+                this.__revisions.push(oData);
+            }
+        },
+
+        restoreRevision: function(key){
+            if(!this.__revisions) return undefined;
+            var oData =  !!key?
+                (
+                    typeof key === "string"?
+                        this.__revisions[key]:
+                        this.__revisions[btoa(JSON.stringify(key))]
+                ):
+                this.__revisions.pop();
+            if(!isEmpty(oData)) this.setData(oData);
+        },
+
+        validateInput: function(notify){
+            if(!isEmpty(getObjProperty(this, 'validation_errors'))){
+                if(!!notify){
+                    var messages = [];
+                    for(var errElem in this.validation_errors){
+                        // TODO?: make inner loop to display messages for elements
+                        messages.push(this.validation_errors[errElem].messages[0]);
+                    }
+                    if(!!sui) sui.input_validation.alert(messages);
+                }
+                return false;
+            }
+            return true;
+        },
+        /**
+         *
+         * @param sPath Absolute path inside the oData member of the model or the object passed through "oContext" param
+         * @param oValue Value to write to sPath in the model object
+         * @param oContext [optional]
+         * @returns {*|void|sap.ui.base.ManagedObject|boolean|sap.uiext.model.json.JSONModel}
+         */
+        setProperty: function(sPath, oValue, oContext){
+            var ret;
+            if(!/^\//.test(arguments[0])){
+                arguments[0] = '/'+arguments[0];
+            }
+
+            // Create path if it does not exist
+            propertyGetSet(parentPath(sPath), this.oData, '/');
+            ret = sap.ui.model.json.JSONModel.prototype.setProperty.apply(this, arguments);
+
+            this.fireEvent('propertyChange', {sPath:sPath, oValue:oValue, oContext:oContext});
+            return ret;
+        },
+        /**
+         * the path to the property
+         * @param {String | Object} sPath
+         * @param {String | Object} [oContext]
+         * @return {Object}
+         */
+        setData: function(){
+            sap.ui.model.json.JSONModel.prototype.setData.apply(this, arguments);
+            this.fireEvent('propertyChange', {sPath:'', oValue:arguments[0], oContext:'/'});
+        },
+        /**
+         * Creates a subset of the model which is a proxy of it, changes will not affect the original model
+         * unless commitChanges as been called on the proxy
+         */
+        proxy: function(sPath){
+            var proxiedValue = this.getProperty(sPath||'/');
+            var proxyModel = new sap.uiext.model.json.JSONModel({data:clone(proxiedValue)});
+            proxyModel._dataSource = {model: this, path: sPath || '/'};
+            return proxyModel;
+        },
+        revert: function(){
+            var dataSrc = this.getDataSource();
+            var srcModel = dataSrc.model;
+            if(!!srcModel){
+                this.setProperty('data', clone(srcModel.getProperty(dataSrc.path)));
+            }
+        },
+        getDataSource: function(){return this._dataSource || {model:undefined, path:undefined};},
+        commitChanges: function(){
+
+        },
+        removeFrom: function(sPath){
+            removeObjProperty(this.getData(),sPath,'/');
+            this.checkUpdate();
+            var delPathArr = sPath.split('/');
+            var changedPath = delPathArr.slice(0,delPathArr.length-1).join('/');
+            this.fireEvent('propertyChange', {sPath:changedPath, oValue:null, oContext:'/', bindPath:changedPath});
+        },
+        renderer : {} // an empty renderer by convention inherits the parent renderer
+    });
+
+});
 
  ui5x.addModLoadHandler("sap.ui.core.Fragment", function() {
 
